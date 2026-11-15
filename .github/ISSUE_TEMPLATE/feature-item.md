@@ -2,9 +2,9 @@
 name: Feature Item
 about: Create a pre-approved feature.
 title: ''
-labels: bug
+labels: Feature
 assignees: XxDaShTixX
-type: Bug
+type: Feature
 
 ---
 
