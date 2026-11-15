@@ -6,6 +6,21 @@
 
 A Windows music player that turns YouTube links into a local, offline-capable library. Personal learning project — ASP.NET Core backend for accounts and metadata, WPF client that downloads and plays audio.
 
+## Login
+<img width="1200" height="800" alt="image" src="https://github.com/user-attachments/assets/8c0e4531-face-4a9d-afd7-60c2c8fa8c06" />
+
+## Library
+<img width="1200" height="800" alt="image" src="https://github.com/user-attachments/assets/3165d5d5-70d2-4b0a-b6d2-30e3b888feab" />
+
+## Playlist
+<img width="1200" height="800" alt="image" src="https://github.com/user-attachments/assets/d16d8f42-f1f8-4e40-8271-2846e2eb0544" />
+
+## Search
+TBD
+
+## Settings
+<img width="1197" height="797" alt="image" src="https://github.com/user-attachments/assets/8e4641db-1e92-4a15-a3e8-2dc3b73cf61d" />
+
 ## ✨ Features
 
 - Email/password accounts with JWT + refresh tokens
