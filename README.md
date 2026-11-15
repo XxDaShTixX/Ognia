@@ -154,7 +154,7 @@ Using AI tools (Copilot, Claude, ChatGPT, Cursor, etc.) is fine. You don't need 
 
 ### 🧭 Not sure where to start?
 
-[Open issues](https://github.com/XxDaShTixX/Ognia/issues) tagged `good first issue` are a good entry point. Or open an issue describing what you'd like to build and we'll figure out the approach together before you write code.
+[Open issues](https://github.com/XxDaShTixX/Ognia/issues) tagged `General` are a good entry point. Or open an issue describing what you'd like to build and we'll figure out the approach together before you write code.
 
 ### 🌱 No contribution is too small
 
