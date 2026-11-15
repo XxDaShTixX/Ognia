@@ -1,0 +1,229 @@
+﻿<UserControl x:Class="Ognia.Frontend.Views.MainPane.PlaylistView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Ognia.Frontend.Views.MainPane">
+    <Grid>
+        <DockPanel Style="{StaticResource PrimaryDockPanel}">
+
+            <!-- Playlist header -->
+            <Border DockPanel.Dock="Top" Margin="0,0,0,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Width="120" Height="120" CornerRadius="8"
+                            ClipToBounds="True"
+                            Background="{DynamicResource TextboxBackgroundColor}">
+                        <Image Source="{Binding Session.SelectedPlaylist.CachedCoverPath, Converter={StaticResource StringToImageSource}}"
+                               Stretch="UniformToFill"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                    </Border>
+
+                    <Grid Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Text="{Binding Session.SelectedPlaylist.Name}"
+                                   Style="{StaticResource TitleText}"
+                                   HorizontalAlignment="Left"
+                                   Margin="0,0,0,4"/>
+
+                        <TextBlock Grid.Row="1"
+                                   Text="{Binding Session.SelectedPlaylist.PlaylistTracksCount, StringFormat='{}{0} tracks'}"
+                                   Style="{StaticResource BodyText}"
+                                   Foreground="{DynamicResource DisabledTextColor}"
+                                   HorizontalAlignment="Left"
+                                   Margin="0,0,0,4"/>
+
+                        <!-- Actions row -->
+                        <Grid Grid.Row="2">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsRenameOpen}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsAddTrackOpen}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left">
+                                <Button Content="▶"
+                                        Command="{Binding PlayPlaylistCommand}"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Width="40" Height="40"/>
+
+                                <Button Content="📁"
+                                        Command="{Binding OpenFolderCommand}"
+                                        Style="{StaticResource IconButton}"
+                                        Width="40" Height="40"
+                                        ToolTip="Open playlist folder"/>
+
+                                <Button Content="🡻"
+                                        Command="{Binding Session.Download.DownloadAllCommand}"
+                                        Style="{StaticResource IconButton}"
+                                        Width="40" Height="40"
+                                        ToolTip="Download all tracks in this playlist"/>
+
+                                <Button Content="━"
+                                        Command="{Binding Session.Download.RemoveAllDownloadsCommand}"
+                                        Style="{StaticResource IconButton}"
+                                        Width="40" Height="40"
+                                        ToolTip="Remove all downloads in this playlist"/>
+
+                                <Button Content="{Binding ShuffleLabel}"
+                                        Command="{Binding ToggleShuffleCommand}"
+                                        Style="{StaticResource IconButton}"
+                                        Width="40" Height="40"
+                                        ToolTip="Toggle shuffle"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="✎"
+                                        Command="{Binding RenamePlaylistCommand}"
+                                        Style="{StaticResource IconButton}"
+                                        Width="40" Height="40"
+                                        ToolTip="Rename playlist"/>
+                                <Button Content="➕"
+                                        Command="{Binding AddTrackCommand}"
+                                        Style="{StaticResource IconButton}"
+                                        Width="40" Height="40"
+                                        ToolTip="Add track to playlist"/>
+                                <Button Content="🗙"
+                                        Command="{Binding DeletePlaylistCommand}"
+                                        Style="{StaticResource IconButton}"
+                                        Width="40" Height="40"
+                                        ToolTip="Delete playlist"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Rename input -->
+                        <StackPanel Grid.Row="3" Margin="0,4,0,0"
+                                    Visibility="{Binding IsRenameOpen, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="New name" Style="{StaticResource PrimaryTextBlock}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox Text="{Binding RenameInput, UpdateSourceTrigger=PropertyChanged}"
+                                         Width="300"/>
+                                <Button Content="✓" 
+                                        Command="{Binding ConfirmRenameCommand}"
+                                        Height="40" Width="40"/>
+                                <Button Content="✕" 
+                                        Command="{Binding CancelRenameCommand}"
+                                        Height="40" Width="40"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Add-track input -->
+                        <StackPanel Grid.Row="4" Margin="0,4,0,0"
+                                    Visibility="{Binding IsAddTrackOpen, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="Track or playlist URL" Style="{StaticResource PrimaryTextBlock}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox Text="{Binding AddTrackUrl, UpdateSourceTrigger=PropertyChanged}"
+                                         Width="300"/>
+                                <Button Content="✓"
+                                        Command="{Binding ConfirmAddTrackCommand}"
+                                        Height="40" Width="40"/>
+                                <Button Content="✕"
+                                        Command="{Binding CancelAddTrackCommand}"
+                                        Height="40" Width="40"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <ListBox x:Name="TracksList"
+                     ItemsSource="{Binding Session.SelectedPlaylistTracks}"
+                     SelectedItem="{Binding Session.SelectedTrack}"
+                     HorizontalContentAlignment="Stretch"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     AllowDrop="True"
+                     PreviewMouseLeftButtonDown="TracksList_PreviewMouseLeftButtonDown"
+                     PreviewMouseMove="TracksList_PreviewMouseMove"
+                     DragOver="TracksList_DragOver"
+                     Drop="TracksList_Drop">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <Grid Margin="0,2" HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="30"/>
+                                    <ColumnDefinition Width="40"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Button Grid.Column="0"
+                                        Content="▶"
+                                        Command="{Binding PlayCommand}"
+                                        Style="{StaticResource IconButton}"
+                                        Width="28" Height="28" Margin="0,0,6,0"
+                                        ToolTip="Play this track"/>
+
+                                <TextBlock Grid.Column="1" Text="{Binding DownloadedLabel}" Foreground="Green" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding DisplayOrder}"
+                                           Foreground="Gray"
+                                           VerticalAlignment="Center"/>
+
+                                <Border Grid.Column="3" Width="32" Height="32" CornerRadius="4"
+                                        Background="{DynamicResource TextboxBackgroundColor}"
+                                        VerticalAlignment="Center" HorizontalAlignment="Left"
+                                        ClipToBounds="True">
+                                    <Image Source="{Binding ThumbnailPath, Converter={StaticResource StringToImageSource}}"
+                                           Stretch="UniformToFill"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                                </Border>
+
+                                <TextBlock Grid.Column="4" Text="{Binding Name}"
+                                           TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontWeight" Value="Normal"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource LightTextColor}"/>
+                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Grid.Column="5" Text="{Binding Duration}"
+                                           Foreground="Gray"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,8,0"/>
+                            </Grid>
+
+                            <Rectangle Height="1" Fill="{DynamicResource SeparatorColor}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+    </Grid>
+</UserControl>

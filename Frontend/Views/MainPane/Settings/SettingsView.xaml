@@ -1,0 +1,95 @@
+﻿<UserControl x:Class="Ognia.Frontend.Views.MainPane.Settings.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <StackPanel>
+
+            <!-- Settings -->
+            <TextBlock Text="Settings"
+                       HorizontalAlignment="Center"
+                       Style="{StaticResource TitleText}"/>
+
+            <Separator Width="500"/>
+
+            <!-- Theme Settings -->
+            <TextBlock Text="Appearance" 
+                       HorizontalAlignment="Center"
+                       Style="{StaticResource SubtitleText}"/>
+
+            <ComboBox Width="200"
+                    ItemsSource="{Binding AvailableThemes}"
+                    SelectedItem="{Binding SelectedTheme, Mode=TwoWay}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <Separator Width="500"/>
+
+            <!-- Library Settings -->
+            <TextBlock Text="Library" 
+                       HorizontalAlignment="Center"
+                       Style="{StaticResource SubtitleText}"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <!-- Export library -->
+                <Button Content="Export" Click="ExportLibrary_Click" ToolTip="Export" 
+                        Visibility="{Binding IsGuestMode, Converter={StaticResource BoolToVisibility}}"/>
+
+                <!-- Import library -->
+                <Button Content="Import" Click="ImportLibrary_Click" ToolTip="Import"
+                        Visibility="{Binding IsGuestMode, Converter={StaticResource BoolToVisibility}}"/>
+            </StackPanel>
+                
+            <Separator Width="250"/>
+
+            <!-- Account Settings -->
+            <TextBlock Text="Account" 
+                       HorizontalAlignment="Center"
+                       Style="{StaticResource SubtitleText}"/>
+            <TextBlock Text="{Binding Email, StringFormat='Signed in as {0}'}"
+                       HorizontalAlignment="Center" Style="{StaticResource SubtitleText}"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <!-- Upgrade Account 
+                <Button Content="Upgrade Account" Click="Upgrade_Click" ToolTip="Upgrade guest to account."
+                        Visibility="{Binding IsGuestMode, Converter={StaticResource BoolToVisibility}}"/>
+                -->
+                
+                <!-- Log Out -->
+                <Button Content="Log Out" Command="{Binding LogoutCommand}"
+                        ToolTip="Logout"/>
+            </StackPanel>
+
+            <!-- Password section 
+            <StackPanel Width="500" HorizontalAlignment="Center">
+                <TextBlock Text="Current password" Style="{StaticResource PrimaryTextBlock}"/>
+                <PasswordBox PasswordChanged="CurrentPasswordBox_PasswordChanged"/>
+
+                <TextBlock Text="New password" Style="{StaticResource PrimaryTextBlock}"/>
+                <PasswordBox x:Name="NewPasswordBox" PasswordChanged="NewPasswordBox_PasswordChanged"/>
+
+                <TextBlock Text="Confirm new password" Style="{StaticResource PrimaryTextBlock}"/>
+                <PasswordBox x:Name="ConfirmPasswordBox" PasswordChanged="ConfirmPasswordBox_PasswordChanged"/>
+
+                <Button Content="Change password" Command="{Binding ChangePasswordCommand}"/>
+            </StackPanel>
+            -->
+
+            <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" Margin="0,10,0,0">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{DynamicResource SuccessColor}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsError}" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource ErrorColor}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </StackPanel>
+    </Grid>
+</UserControl>
