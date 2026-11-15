@@ -2,7 +2,7 @@
 name: 'Bug Item '
 about: Create a bug for a broken functionality.
 title: ''
-labels: Bug
+labels: Bug, Feature
 assignees: XxDaShTixX
 type: Bug
 
