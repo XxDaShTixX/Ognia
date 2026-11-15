@@ -16,6 +16,10 @@
     <EmbeddedResource Include="Themes\Default.json" />
     <EmbeddedResource Include="Themes\Dark.json" />
     <EmbeddedResource Include="Themes\Light.json" />
+    <Page Include="Themes\Default.json">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 
   <ItemGroup>

@@ -19,6 +19,7 @@ public sealed class LoginViewModel : ViewModelBase
     private string _registerStatus = string.Empty;
     private bool _isLoginError;
     private bool _isRegisterError;
+    private bool _showLoginForm;
 
     public LoginViewModel(ApiClientService api, IAppNavigator nav)
     {
@@ -35,6 +36,9 @@ public sealed class LoginViewModel : ViewModelBase
 
         GuestCommand = new RelayCommand(_ => _nav.EnterGuestMode());
         ForgotPasswordCommand = new RelayCommand(_ => _nav.ShowResetPassword());
+
+        ShowLoginFormCommand = new RelayCommand(_ => ShowLoginForm = true);
+        BackToLandingCommand = new RelayCommand(_ => ShowLoginForm = false);
     }
 
     public string Email { get => _email; set => SetProperty(ref _email, value); }
@@ -48,10 +52,24 @@ public sealed class LoginViewModel : ViewModelBase
     public bool IsLoginError { get => _isLoginError; set => SetProperty(ref _isLoginError, value); }
     public bool IsRegisterError { get => _isRegisterError; set => SetProperty(ref _isRegisterError, value); }
 
+    public bool ShowLoginForm
+    {
+        get => _showLoginForm;
+        set
+        {
+            if (!SetProperty(ref _showLoginForm, value)) return;
+            OnPropertyChanged(nameof(ShowLanding));
+        }
+    }
+
+    public bool ShowLanding => !_showLoginForm;
+
     public RelayCommand LoginCommand { get; }
     public RelayCommand SignUpCommand { get; }
     public RelayCommand GuestCommand { get; }
     public RelayCommand ForgotPasswordCommand { get; }
+    public RelayCommand ShowLoginFormCommand { get; }
+    public RelayCommand BackToLandingCommand { get; }
 
     private async Task LoginAsync()
     {

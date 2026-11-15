@@ -32,6 +32,7 @@ public class AuthController : ControllerBase
         _signInManager = signInManager;
         _tokenService = tokenService;
         _jwtSettings = jwtOptions.Value;
+        _env = env;
     }
 
     [HttpPost("register")]
