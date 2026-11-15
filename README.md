@@ -141,7 +141,7 @@ Using AI tools (Copilot, Claude, ChatGPT, Cursor, etc.) is fine. You don't need 
 
 ### 🔍 What I'll look at in a PR
 
-- Does it work? Build clean, no obvious regressions.
+- Does it work? Build clean, no errors or warning, no obvious regressions.
 - Does it fit the existing structure? MVVM in the client, DTOs in the backend, `ITrackSourceService` for new sources.
 - Does it work in guest mode too? Anything user-facing should either function with `LocalMusicRepo` or be explicitly hidden when no backend is configured.
 - Is the diff small? Large sweeping refactors are harder to review than focused changes.
