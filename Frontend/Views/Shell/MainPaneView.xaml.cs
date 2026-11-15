@@ -12,7 +12,7 @@ public partial class MainPaneView : UserControl
         InitializeComponent();
     }
 
-    public object? Content
+    public object? HostedContent
     {
         get => HostContent.Content;
         set => HostContent.Content = value;

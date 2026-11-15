@@ -3,25 +3,52 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Border Style="{StaticResource PaneBorder}">
         <Grid Style="{StaticResource PaneContent}">
+
+            <!-- Landing: big icon + choice -->
             <StackPanel VerticalAlignment="Center"
-                        MinWidth="100"
-                        MaxWidth="500">
-                
-                <!-- Logo -->
+                        HorizontalAlignment="Center"
+                        MaxWidth="500"
+                        Visibility="{Binding ShowLanding, Converter={StaticResource BoolToVisibility}}">
+
                 <Image Source="/Assets/Icon/app.png"
                        Width="300" Height="300"
                        HorizontalAlignment="Center"
                        Margin="0,0,0,10"
                        RenderOptions.BitmapScalingMode="HighQuality"/>
 
-                <!-- Guest Mode-->
-                <TextBlock Text="Continue as Guest" Style="{StaticResource TitleText}"/>
-                <Button Content="Guest"
+                <Button Content="Continue as Guest"
                         Command="{Binding GuestCommand}"
-                        Style="{StaticResource PrimaryButton}"/>
+                        Style="{StaticResource PrimaryButton}"
+                        Width="240"
+                        HorizontalAlignment="Center"/>
 
-                <!-- Account Mode -->
-                <RibbonSeparator/>
+                <Button Content="Log In"
+                        Command="{Binding ShowLoginFormCommand}"
+                        Style="{StaticResource PrimaryButton}"
+                        Width="240"
+                        HorizontalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Login / Register form -->
+            <StackPanel VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        MinWidth="280"
+                        MaxWidth="400"
+                        Visibility="{Binding ShowLoginForm, Converter={StaticResource BoolToVisibility}}">
+
+                <Button Content="↩"
+                        Command="{Binding BackToLandingCommand}"
+                        HorizontalAlignment="Left"
+                        Style="{StaticResource IconButton}"
+                        Width="40" Height="40"
+                        ToolTip="Back"/>
+
+                <Image Source="/Assets/Icon/app.png"
+                       Width="56" Height="56"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,10"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+
                 <TextBlock Text="Log In" Style="{StaticResource TitleText}"/>
 
                 <TextBlock Text="Email" Style="{StaticResource PrimaryTextBlock}"/>
