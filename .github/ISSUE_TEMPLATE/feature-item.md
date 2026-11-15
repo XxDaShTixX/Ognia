@@ -2,14 +2,15 @@
 name: Feature Item
 about: Create a pre-approved feature.
 title: ''
-labels: ''
+labels: bug
 assignees: XxDaShTixX
+type: Bug
 
 ---
 
-**Description**
+**DESCRIPTION**
 What is this new feature you are suggesting?
 
-**Acceptance Criteria**
+**ACCEPTANCE CRITERIA**
 - Must be able to '...'
 - There must be '...'
