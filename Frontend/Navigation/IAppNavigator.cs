@@ -10,6 +10,7 @@ public interface IAppNavigator : IShellNavigator
     void EnterGuestMode();
     void ShowLogin();
     void ShowResetPassword();
+    void RestoreShellContent();
     void Logout();
 
     bool HasPendingUpgrade { get; }

@@ -1,0 +1,120 @@
+﻿<UserControl x:Class="Ognia.Frontend.Views.Shell.MiniPlayerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border ClipToBounds="True"
+            Background="{DynamicResource SidebarBackgroundColor}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Cover: square, full height -->
+            <Border Grid.Column="0"
+                    Width="100" Height="100"
+                    CornerRadius="4"
+                    ClipToBounds="True"
+                    Background="{DynamicResource TextboxBackgroundColor}"
+                    VerticalAlignment="Center"
+                    Margin="8">
+                <Image Source="{Binding PlaybackViewModel.CurrentTrack.ThumbnailPath, Converter={StaticResource StringToImageSource}}"
+                       Stretch="UniformToFill"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+            </Border>
+
+            <!-- Right column -->
+            <Grid Grid.Column="1" Margin="0,8,8,8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Now playing (top row) -->
+                <TextBlock Grid.Row="0"
+                           Text="{Binding PlaybackViewModel.NowPlaying}"
+                           TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center"
+                           Margin="4,0,0,4"
+                           ClipToBounds="True"
+                           Style="{StaticResource PrimaryTextBlock}"/>
+
+                <!-- Seek row: position + slider + duration, full width -->
+                <Grid Grid.Row="1" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding PlaybackViewModel.PositionLabel}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,6,0"
+                               FontSize="11"
+                               Style="{StaticResource PrimaryTextBlock}"/>
+
+                    <Slider Grid.Column="1"
+                            Minimum="0"
+                            Maximum="{Binding PlaybackViewModel.TotalDuration, Converter={StaticResource TimeSpanToSecondsConverter}}"
+                            Value="{Binding PlaybackViewModel.CurrentPosition, Mode=TwoWay, Converter={StaticResource TimeSpanToSecondsConverter}}"
+                            VerticalAlignment="Center"
+                            MinHeight="0"
+                            IsMoveToPointEnabled="True"
+                            Thumb.DragStarted="Slider_DragStarted"
+                            Thumb.DragCompleted="Slider_DragCompleted"/>
+
+                    <TextBlock Grid.Column="2"
+                               Text="{Binding PlaybackViewModel.DurationLabel}"
+                               VerticalAlignment="Center"
+                               Margin="6,0,0,0"
+                               FontSize="11"
+                               Style="{StaticResource PrimaryTextBlock}"/>
+                </Grid>
+
+                <!-- Transport row: buttons left, volume right -->
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="⏮"
+                                Command="{Binding PlaybackViewModel.PreviousCommand}"
+                                Style="{StaticResource IconButton}"
+                                Width="28" Height="28"
+                                ToolTip="Previous"/>
+                        <Button Content="{Binding PlaybackViewModel.PlayPauseLabel}"
+                                Command="{Binding PlaybackViewModel.PlayPauseCommand}"
+                                Style="{StaticResource IconButton}"
+                                Width="50" Height="50"
+                                ToolTip="Play/Pause"/>
+                        <Button Content="⏭"
+                                Command="{Binding PlaybackViewModel.NextCommand}"
+                                Style="{StaticResource IconButton}"
+                                Width="28" Height="28"
+                                ToolTip="Next"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="{Binding PlaybackViewModel.VolumeIcon}"
+                                Command="{Binding PlaybackViewModel.ToggleMuteCommand}"
+                                Style="{StaticResource IconButton}"
+                                Width="28" Height="28"
+                                ToolTip="Mute/Unmute"/>
+                        <Slider Width="70"
+                                Minimum="0" Maximum="1"
+                                Value="{Binding PlaybackViewModel.Volume, Mode=TwoWay}"
+                                VerticalAlignment="Center"
+                                MinHeight="0"
+                                IsMoveToPointEnabled="True"
+                                ToolTip="Volume"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

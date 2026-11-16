@@ -12,6 +12,8 @@ public class YouTubeAudioDownloader
 
     /// <summary>
     /// Downloads a track's audio into the shared music root.
+    /// Writes to a unique temp file first, then atomically moves into place,
+    /// so concurrent callers never observe or open a partially-written file.
     /// Returns the saved file path.
     /// </summary>
     public async Task<string> DownloadAsync(
@@ -28,23 +30,47 @@ public class YouTubeAudioDownloader
 
         var targetPath = Path.Combine(folder, LocalLibrary.BuildFileName(model.Name));
 
-        // Already downloaded in this playlist — skip.
-        if (model.LocalFilePath != null) return targetPath;
+        // Already on disk — nothing to do. This is the fast path for a second caller
+        // that arrives after the first caller's Move has completed.
+        if (File.Exists(targetPath))
+            return targetPath;
 
-        var manifest = await _youtube.Videos.Streams.GetManifestAsync(model.SourceId, ct);
-        var audioStream = manifest.GetAudioOnlyStreams().GetWithHighestBitrate();
+        var tempPath = targetPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
 
-        if (progress != null)
+        try
         {
-            await _youtube.Videos.Streams.DownloadAsync(
-                audioStream, targetPath,
-                new Progress<double>(p => progress.Report(p)), ct);
-        }
-        else
-        {
-            await _youtube.Videos.Streams.DownloadAsync(audioStream, targetPath, null, ct);
-        }
+            var manifest = await _youtube.Videos.Streams.GetManifestAsync(model.SourceId, ct);
+            var audioStream = manifest.GetAudioOnlyStreams().GetWithHighestBitrate();
 
-        return targetPath;
+            if (progress != null)
+            {
+                await _youtube.Videos.Streams.DownloadAsync(
+                    audioStream, tempPath,
+                    new Progress<double>(p => progress.Report(p)), ct);
+            }
+            else
+            {
+                await _youtube.Videos.Streams.DownloadAsync(audioStream, tempPath, null, ct);
+            }
+
+            // Atomic replace. If another caller won the race while we were downloading,
+            // their file is already at targetPath; discard ours.
+            try
+            {
+                File.Move(tempPath, targetPath, overwrite: false);
+            }
+            catch (IOException)
+            {
+                // Someone else moved a file into place first. Use theirs.
+                try { File.Delete(tempPath); } catch { }
+            }
+
+            return targetPath;
+        }
+        catch
+        {
+            try { if (File.Exists(tempPath)) File.Delete(tempPath); } catch { }
+            throw;
+        }
     }
 }

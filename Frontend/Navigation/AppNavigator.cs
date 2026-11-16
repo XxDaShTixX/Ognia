@@ -1,5 +1,4 @@
 ﻿using Ognia.Frontend.Helpers;
-using Ognia.Frontend.Local;
 using Ognia.Frontend.Models.Playlist;
 using Ognia.Frontend.Repos;
 using Ognia.Frontend.Services;
@@ -18,12 +17,12 @@ public sealed class AppNavigator : IAppNavigator
 {
     private readonly ApiClientService _api;
     private readonly Action<object> _setScreen;
-
     private AppSession? _session;
     private PlaybackViewModel? _playback;
     private DownloadViewModel? _download;
     private TrackDetailsViewModel? _rightVm;
     private string? _pendingUpgradePath;
+    private ShellView? _shell;
 
     public AppNavigator(ApiClientService api, Action<object> setScreen)
     {
@@ -33,6 +32,8 @@ public sealed class AppNavigator : IAppNavigator
 
     public event Action<object>? MainContentChanged;
     public event Action<object?>? RightContentChanged;
+
+    public PlaybackViewModel? Playback => _playback;
 
     #region IShellNavigator
 
@@ -87,6 +88,12 @@ public sealed class AppNavigator : IAppNavigator
     public void ShowLogin() => _setScreen(new LoginView(_api, this));
 
     public void ShowResetPassword() => _setScreen(new ResetPasswordView(_api, this));
+
+    public void RestoreShellContent()
+    {
+        if (_shell == null) return;
+        _setScreen(_shell);
+    }
 
     public void Logout()
     {
@@ -166,10 +173,11 @@ public sealed class AppNavigator : IAppNavigator
         _playback = playback;
         _download = download;
 
-        var shell = new Views.Shell.ShellView
+        var shell = new ShellView
         {
             DataContext = new ShellViewModel(session, this)
         };
+        _shell = shell;
 
         MainContentChanged += shell.SetMainContent;
         RightContentChanged += shell.SetRightContent;
@@ -212,6 +220,7 @@ public sealed class AppNavigator : IAppNavigator
         _rightVm = null;
         _session?.Details = null;
         _session = null;
+        _shell = null;
         MainContentChanged = null;
         RightContentChanged = null;
     }
