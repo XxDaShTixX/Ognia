@@ -6,6 +6,10 @@ namespace Ognia.Frontend.ViewModels;
 
 public class DownloadViewModel : ViewModelBase
 {
+    // Per-track download coalescing. Two callers for the same track share one Task.
+    private readonly Dictionary<int, Task<bool>> _inFlight = new();
+    private readonly object _inFlightGate = new();
+
     private bool _isDownloading;
     private bool _isDownloadingAll;
     private int _downloadAllTotal;
@@ -129,12 +133,33 @@ public class DownloadViewModel : ViewModelBase
 
     /// <summary>
     /// Ensures a track is downloaded. Returns true if the file is now local, false on failure.
+    /// Concurrent calls for the same track share a single download.
     /// Used by PlaybackService via its TrackDownloadRequested callback.
     /// </summary>
-    public async Task<bool> EnsureDownloadedAsync(TrackRowViewModel track)
+    public Task<bool> EnsureDownloadedAsync(TrackRowViewModel track)
     {
-        if (track.IsDownloaded) return true;
+        if (track.IsDownloaded) return Task.FromResult(true);
 
+        lock (_inFlightGate)
+        {
+            if (_inFlight.TryGetValue(track.Id, out var existing))
+                return existing;
+
+            var task = DownloadAndFlagAsync(track);
+            _inFlight[track.Id] = task;
+
+            // Remove from the coalescing map once complete, success or failure.
+            _ = task.ContinueWith(_ =>
+            {
+                lock (_inFlightGate) _inFlight.Remove(track.Id);
+            }, TaskScheduler.Default);
+
+            return task;
+        }
+    }
+
+    private async Task<bool> DownloadAndFlagAsync(TrackRowViewModel track)
+    {
         try
         {
             var downloader = new YouTubeAudioDownloader();
@@ -161,13 +186,7 @@ public class DownloadViewModel : ViewModelBase
         IsDownloading = true;
         try
         {
-            var downloader = new YouTubeAudioDownloader();
-            await downloader.DownloadAsync(SelectedTrack);
-            SelectedTrack.IsDownloaded = true;
-        }
-        catch (Exception ex)
-        {
-            ErrorOccurred?.Invoke($"Download failed: {ex.Message}");
+            await EnsureDownloadedAsync(SelectedTrack);
         }
         finally
         {
@@ -225,16 +244,8 @@ public class DownloadViewModel : ViewModelBase
 
                 ProgressReported?.Invoke($"Downloading {DownloadAllCompleted + 1}/{DownloadAllTotal}: {track.Name}");
 
-                try
-                {
-                    var downloader = new YouTubeAudioDownloader();
-                    await downloader.DownloadAsync(track);
-                    track.IsDownloaded = true;
-                }
-                catch
-                {
+                if (!await EnsureDownloadedAsync(track))
                     failed++;
-                }
 
                 DownloadAllCompleted++;
                 ProgressReported?.Invoke($"Downloading {DownloadAllCompleted}/{DownloadAllTotal}…");
