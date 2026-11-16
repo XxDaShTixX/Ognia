@@ -11,6 +11,10 @@ public partial class ShellView : UserControl
         RightPane.CloseRequested += () => SetRightContent(null);
     }
 
+    public object? PlaybackBarDataContext => PlaybackContent.Content is PlaybackBarView pb
+        ? pb.DataContext
+        : null;
+
     public void SetPlaybackContent(object view) => PlaybackContent.Content = view;
 
     public void SetMainContent(object view) => MainPane.HostedContent = view;

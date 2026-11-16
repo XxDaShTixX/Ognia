@@ -3,6 +3,8 @@ using Ognia.Frontend.Helpers;
 using Ognia.Frontend.Navigation;
 using Ognia.Frontend.Repos;
 using Ognia.Frontend.Services;
+using Ognia.Frontend.ViewModels;
+using Ognia.Frontend.Views.Shell;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
@@ -69,13 +71,27 @@ public partial class MainWindow : Window
         Application.Current.Dispatcher.Invoke(Navigator.ShowLogin);
     }
 
+    #region Window chrome
     private void MinimizeButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_isMini) ExitMiniMode();
         WindowState = WindowState.Minimized;
+    }
+
+    private void MiniButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isMini) ExitMiniMode();
+        else EnterMiniMode();
     }
 
     private void MaximizeButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_isMini)
+        {
+            ExitMiniMode();
+            return;
+        }
+
         WindowState = WindowState == WindowState.Maximized
             ? WindowState.Normal
             : WindowState.Maximized;
@@ -86,4 +102,136 @@ public partial class MainWindow : Window
         Navigator.DisposeShell();
         Close();
     }
+    #endregion
+
+    #region Mini player
+
+    private const double MiniWidth = 420;
+    private const double MiniHeight = 175;
+    private const double MiniMargin = 12;
+    private const double NormalMinWidth = 1200;
+    private const double NormalMinHeight = 800;
+    private const double MiniRestingOpacity = 0.2;
+    private static readonly TimeSpan MiniFadeIn = TimeSpan.FromMilliseconds(150);
+    private static readonly TimeSpan MiniFadeOut = TimeSpan.FromMilliseconds(400);
+    private static readonly TimeSpan MiniFadeOutDelay = TimeSpan.FromMilliseconds(1500);
+
+    private WindowState _preMiniState = WindowState.Normal;
+    private double _preMiniLeft;
+    private double _preMiniTop;
+    private double _preMiniWidth;
+    private double _preMiniHeight;
+    private bool _isMini;
+    private System.Windows.Threading.DispatcherTimer? _miniFadeTimer;
+
+    private void EnterMiniMode()
+    {
+        if (_isMini) return;
+        if (MainContent.Content is not ShellView shell) return;
+
+        _preMiniState = WindowState;
+        _preMiniLeft = Left;
+        _preMiniTop = Top;
+        _preMiniWidth = Width;
+        _preMiniHeight = Height;
+
+        WindowState = WindowState.Normal;
+
+        var barVm = shell.PlaybackBarDataContext as PlaybackBarViewModel;
+        if (barVm == null) return;
+
+        // Resize and style the window BEFORE swapping content so the mini
+        // view lays out against the final size on its first measure pass.
+        MinWidth = 0;
+        MinHeight = 0;
+
+        var wa = SystemParameters.WorkArea;
+        Left = wa.Right - MiniWidth - MiniMargin;
+        Top = wa.Bottom - MiniHeight - MiniMargin;
+        Width = MiniWidth;
+        Height = MiniHeight;
+
+        Topmost = true;
+        ShowInTaskbar = false;
+        ResizeMode = ResizeMode.NoResize;
+
+        // Now swap content — it measures against the mini geometry.
+        var mini = new MiniPlayerView { DataContext = barVm };
+        MainContent.Content = mini;
+
+        Opacity = MiniRestingOpacity;
+        MouseEnter += Mini_HoverEnter;
+        MouseLeave += Mini_HoverLeave;
+
+        _isMini = true;
+    }
+
+    private void ExitMiniMode()
+    {
+        if (!_isMini) return;
+
+        MouseEnter -= Mini_HoverEnter;
+        MouseLeave -= Mini_HoverLeave;
+        StopMiniFadeTimer();
+        BeginAnimation(OpacityProperty, null);
+        Opacity = 1.0;
+
+        Topmost = false;
+        ShowInTaskbar = true;
+        ResizeMode = ResizeMode.CanResize;
+
+        MinWidth = NormalMinWidth;
+        MinHeight = NormalMinHeight;
+
+        Width = _preMiniWidth;
+        Height = _preMiniHeight;
+        Left = _preMiniLeft;
+        Top = _preMiniTop;
+        WindowState = _preMiniState == WindowState.Maximized
+            ? WindowState.Maximized
+            : WindowState.Normal;
+
+        Navigator.RestoreShellContent();
+
+        _isMini = false;
+    }
+
+    private void Mini_HoverEnter(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        StopMiniFadeTimer();
+        AnimateWindowOpacity(1.0, MiniFadeIn);
+    }
+
+    private void Mini_HoverLeave(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        StopMiniFadeTimer();
+
+        _miniFadeTimer = new System.Windows.Threading.DispatcherTimer { Interval = MiniFadeOutDelay };
+        _miniFadeTimer.Tick += (_, _) =>
+        {
+            StopMiniFadeTimer();
+            AnimateWindowOpacity(MiniRestingOpacity, MiniFadeOut);
+        };
+        _miniFadeTimer.Start();
+    }
+
+    private void StopMiniFadeTimer()
+    {
+        if (_miniFadeTimer == null) return;
+        _miniFadeTimer.Stop();
+        _miniFadeTimer = null;
+    }
+
+    private void AnimateWindowOpacity(double target, TimeSpan duration)
+    {
+        var anim = new System.Windows.Media.Animation.DoubleAnimation
+        {
+            To = target,
+            Duration = new Duration(duration),
+            FillBehavior = System.Windows.Media.Animation.FillBehavior.HoldEnd
+        };
+        BeginAnimation(OpacityProperty, anim);
+    }
+
+    #endregion
 }

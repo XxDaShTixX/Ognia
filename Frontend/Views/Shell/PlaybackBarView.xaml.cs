@@ -8,11 +8,6 @@ public partial class PlaybackBarView : UserControl
     public PlaybackBarView()
     {
         InitializeComponent();
-        Unloaded += (_, _) =>
-        {
-            if (DataContext is PlaybackBarViewModel vm)
-                vm.PlaybackViewModel.Dispose();
-        };
     }
 
     private void Slider_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
