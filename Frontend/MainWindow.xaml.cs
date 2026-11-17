@@ -111,7 +111,7 @@ public partial class MainWindow : Window
     private const double MiniMargin = 12;
     private const double NormalMinWidth = 1200;
     private const double NormalMinHeight = 800;
-    private const double MiniRestingOpacity = 0.2;
+    private const double MiniRestingOpacity = 0.1;
     private static readonly TimeSpan MiniFadeIn = TimeSpan.FromMilliseconds(150);
     private static readonly TimeSpan MiniFadeOut = TimeSpan.FromMilliseconds(400);
     private static readonly TimeSpan MiniFadeOutDelay = TimeSpan.FromMilliseconds(1500);
