@@ -70,8 +70,7 @@ public class WindowSettings
 {
     public double Width { get; set; } = 1200;
     public double Height { get; set; } = 800;
-    public double? Left { get; set; }
-    public double? Top { get; set; }
+    public double MiniRestingOpacity { get; set; } = 0.2;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public WindowState State { get; set; } = WindowState.Normal;

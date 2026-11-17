@@ -59,23 +59,6 @@ public partial class MainWindow : Window
         if (w.Width > 0) Width = w.Width;
         if (w.Height > 0) Height = w.Height;
 
-        if (w.Left.HasValue && w.Top.HasValue)
-        {
-            var rect = new Rect(w.Left.Value, w.Top.Value, Width, Height);
-            var onScreen =
-                SystemParameters.VirtualScreenLeft <= rect.Left &&
-                rect.Right <= SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth &&
-                SystemParameters.VirtualScreenTop <= rect.Top &&
-                rect.Bottom <= SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight;
-
-            if (onScreen)
-            {
-                WindowStartupLocation = WindowStartupLocation.Manual;
-                Left = w.Left.Value;
-                Top = w.Top.Value;
-            }
-        }
-
         if (w.State == WindowState.Maximized)
             WindowState = WindowState.Maximized;
     }
@@ -88,8 +71,6 @@ public partial class MainWindow : Window
 
         AppSettings.Current.Window.Width = bounds.Width;
         AppSettings.Current.Window.Height = bounds.Height;
-        AppSettings.Current.Window.Left = bounds.Left;
-        AppSettings.Current.Window.Top = bounds.Top;
         AppSettings.Current.Window.State = WindowState == WindowState.Minimized
             ? WindowState.Normal
             : WindowState;
@@ -179,7 +160,6 @@ public partial class MainWindow : Window
     private const double MiniMargin = 12;
     private const double NormalMinWidth = 1200;
     private const double NormalMinHeight = 800;
-    private const double MiniRestingOpacity = 0.1;
     private static readonly TimeSpan MiniFadeIn = TimeSpan.FromMilliseconds(150);
     private static readonly TimeSpan MiniFadeOut = TimeSpan.FromMilliseconds(400);
     private static readonly TimeSpan MiniFadeOutDelay = TimeSpan.FromMilliseconds(1500);
@@ -227,7 +207,7 @@ public partial class MainWindow : Window
         var mini = new MiniPlayerView { DataContext = barVm };
         MainContent.Content = mini;
 
-        Opacity = MiniRestingOpacity;
+        Opacity = AppSettings.Current.Window.MiniRestingOpacity;
         MouseEnter += Mini_HoverEnter;
         MouseLeave += Mini_HoverLeave;
 
@@ -278,7 +258,7 @@ public partial class MainWindow : Window
         _miniFadeTimer.Tick += (_, _) =>
         {
             StopMiniFadeTimer();
-            AnimateWindowOpacity(MiniRestingOpacity, MiniFadeOut);
+            AnimateWindowOpacity(AppSettings.Current.Window.MiniRestingOpacity, MiniFadeOut);
         };
         _miniFadeTimer.Start();
     }
