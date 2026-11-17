@@ -1,5 +1,6 @@
 ﻿using NAudio.Wave;
 using Ognia.Frontend.Enums;
+using Ognia.Frontend.Helpers;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -15,14 +16,11 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
 
     private TimeSpan _currentPosition;
     private TimeSpan _totalDuration;
-    private double _volume = 1.0;
-    private bool _isMuted;
-    private double _volumeBeforeMute = 1.0;
+    private TimeSpan _pendingRestorePosition;
+
     private bool _isStarting;
     private bool _isSeeking;
     private bool _isAdvancing;
-    private RepeatMode _repeatMode = RepeatMode.Off;
-    private bool _isShuffleOn;
     private string _nowPlaying = string.Empty;
     private TrackRowViewModel? _currentTrack;
     private bool _disposed;
@@ -34,7 +32,12 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
         _positionTimer.Tick += OnTimerTick;
         _positionTimer.Start();
 
+        // Restore last-used state.
+        var saved = AppSettings.Current.Playback;
+        _volume = Math.Clamp(saved.Volume, 0.0, 1.0);
         _waveOut.Volume = (float)_volume;
+        _repeatMode = saved.RepeatMode;
+        _isShuffleOn = saved.Shuffle;
 
         PlayPauseCommand = new RelayCommand(_ => PlayPause(), _ => CurrentTrack != null);
         StopCommand = new RelayCommand(_ => Stop(), _ => PlaybackState != NAudio.Wave.PlaybackState.Stopped);
@@ -67,6 +70,11 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
             if (_currentTrack != null) _currentTrack.IsPlaying = false;
             _currentTrack = value;
             if (_currentTrack != null) _currentTrack.IsPlaying = true;
+
+            AppSettings.Current.Playback.LastTrackId = value?.Id;
+            if (_pendingRestorePosition == TimeSpan.Zero)
+                AppSettings.Current.Playback.LastTrackPosition = 0;
+            AppSettings.Save();
 
             OnPropertyChanged();
             CommandManager.InvalidateRequerySuggested();
@@ -145,8 +153,11 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
 
     #endregion
 
-    #region Volume / mute
+    #region Volume / Mute
 
+    private double _volumeBeforeMute = 1.0;
+
+    private double _volume = 1.0;
     public double Volume
     {
         get => _volume;
@@ -161,10 +172,14 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
                     OnPropertyChanged(nameof(IsMuted));
                     OnPropertyChanged(nameof(VolumeIcon));
                 }
+
+                AppSettings.Current.Playback.Volume = value;
+                AppSettings.Save();
             }
         }
     }
 
+    private bool _isMuted;
     public bool IsMuted
     {
         get => _isMuted;
@@ -196,20 +211,6 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
     #endregion
 
     #region Repeat / shuffle
-
-    public RepeatMode RepeatMode
-    {
-        get => _repeatMode;
-        set
-        {
-            if (SetProperty(ref _repeatMode, value))
-            {
-                OnPropertyChanged(nameof(RepeatLabel));
-                System.Windows.Input.CommandManager.InvalidateRequerySuggested();
-            }
-        }
-    }
-
     public string RepeatLabel => RepeatMode switch
     {
         RepeatMode.Off => "➜",
@@ -218,6 +219,24 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
         _ => "➜"
     };
 
+    private RepeatMode _repeatMode = RepeatMode.Off;
+    public RepeatMode RepeatMode
+    {
+        get => _repeatMode;
+        set
+        {
+            if (SetProperty(ref _repeatMode, value))
+            {
+                OnPropertyChanged(nameof(RepeatLabel));
+                CommandManager.InvalidateRequerySuggested();
+
+                AppSettings.Current.Playback.RepeatMode = value;
+                AppSettings.Save();
+            }
+        }
+    }
+
+    private bool _isShuffleOn;
     public bool IsShuffleOn
     {
         get => _isShuffleOn;
@@ -226,7 +245,10 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
             if (SetProperty(ref _isShuffleOn, value))
             {
                 OnPropertyChanged(nameof(ShuffleLabel));
-                System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+                CommandManager.InvalidateRequerySuggested();
+
+                AppSettings.Current.Playback.Shuffle = value;
+                AppSettings.Save();
             }
         }
     }
@@ -257,12 +279,13 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
     {
         switch (_waveOut.PlaybackState)
         {
-            case NAudio.Wave.PlaybackState.Playing:
+            case PlaybackState.Playing:
                 _waveOut.Pause();
+                PersistCurrentPosition();
                 NotifyPlaybackChanged();
                 return;
 
-            case NAudio.Wave.PlaybackState.Paused:
+            case PlaybackState.Paused:
                 _waveOut.Play();
                 NotifyPlaybackChanged();
                 return;
@@ -284,6 +307,8 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
     /// <summary>Stops playback, disposes the reader, and resets position, duration, and now-playing.</summary>
     public void Stop()
     {
+        PersistCurrentPosition();
+
         _waveOut.Stop();
         _reader?.Dispose();
         _reader = null;
@@ -344,7 +369,20 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
             _reader = new AudioFileReader(path);
             _waveOut.Init(_reader);
             TotalDuration = _reader.TotalTime;
-            CurrentPosition = TimeSpan.Zero;
+
+            // Apply any pending restore position (clamped to file length).
+            var startAt = _pendingRestorePosition;
+            _pendingRestorePosition = TimeSpan.Zero;
+            if (startAt > TimeSpan.Zero && startAt < _reader.TotalTime)
+            {
+                _reader.CurrentTime = startAt;
+                CurrentPosition = startAt;
+            }
+            else
+            {
+                CurrentPosition = TimeSpan.Zero;
+            }
+
             _waveOut.Play();
             NowPlaying = CurrentTrack.Name;
             NotifyPlaybackChanged();
@@ -454,6 +492,30 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
         CommandManager.InvalidateRequerySuggested();
     }
 
+    /// <summary>
+    /// Sets the current track without playing, downloading, or touching <see cref="Tracks"/>.
+    /// Used on startup to restore the playback bar from persisted state.
+    /// </summary>
+    public void RestoreTrack(TrackRowViewModel track)
+    {
+        _pendingRestorePosition = TimeSpan.FromSeconds(
+            Math.Max(0, AppSettings.Current.Playback.LastTrackPosition));
+
+        CurrentTrack = track;
+
+        // Give the seek slider a range before the reader exists, otherwise
+        // Maximum (bound to TotalDuration) is 0 and the thumb pins to the end.
+        TotalDuration = track.Duration;
+
+        if (_pendingRestorePosition > TimeSpan.Zero && _pendingRestorePosition < track.Duration)
+            CurrentPosition = _pendingRestorePosition;
+
+        NowPlaying = track.Name;
+        OnPropertyChanged(nameof(CurrentTrack));
+        OnPropertyChanged(nameof(NowPlaying));
+        CommandManager.InvalidateRequerySuggested();
+    }
+
     #endregion
 
     #region Seeking
@@ -472,6 +534,7 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
         {
             _reader.CurrentTime = position;
             CurrentPosition = position;
+            PersistCurrentPosition();
         }
 
         _isSeeking = false;
@@ -523,13 +586,23 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(IsPlaying));
         OnPropertyChanged(nameof(IsPaused));
         OnPropertyChanged(nameof(PlayPauseLabel));
-        System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+        CommandManager.InvalidateRequerySuggested();
+    }
+
+    private void PersistCurrentPosition()
+    {
+        if (_currentTrack == null) return;
+
+        AppSettings.Current.Playback.LastTrackPosition = CurrentPosition.TotalSeconds;
+        AppSettings.Save();
     }
 
     public void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
+
+        PersistCurrentPosition();
 
         _positionTimer.Stop();
         _positionTimer.Tick -= OnTimerTick;

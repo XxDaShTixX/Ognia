@@ -1,4 +1,5 @@
 ﻿using Ognia.Frontend.Repos;
+using Ognia.Frontend.ViewModels;
 
 namespace Ognia.Frontend.Navigation;
 
@@ -18,4 +19,7 @@ public interface IAppNavigator : IShellNavigator
 
     Task<(bool Success, string? Error, string? BackupPath)> PrepareUpgradeAsync();
     void BeginUpgrade(string backupPath);
+
+    /// <summary>The active playback view model, or null when no shell is shown.</summary>
+    PlaybackViewModel? Playback { get; }
 }

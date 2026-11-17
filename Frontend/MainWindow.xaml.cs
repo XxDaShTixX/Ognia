@@ -23,7 +23,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         Current = this;
 
-        Api = new ApiClientService(ApiConfig.BaseUrl);
+        Api = new ApiClientService(AppSettings.Current.Api.BaseUrl);
         Navigator = new AppNavigator(Api, view => MainContent.Content = view);
 
         Api.Unauthorized += OnUnauthorized;
@@ -31,7 +31,14 @@ public partial class MainWindow : Window
         _ = InitializeAuthAsync();
     }
 
-    #region Round Edges
+    /// <summary>
+    /// Window round edges
+    /// </summary>
+    /// <param name="hwnd"></param>
+    /// <param name="attr"></param>
+    /// <param name="value"></param>
+    /// <param name="size"></param>
+    /// <returns></returns>
     [DllImport("dwmapi.dll", PreserveSig = true)]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
 
@@ -41,8 +48,58 @@ public partial class MainWindow : Window
         var hwnd = new WindowInteropHelper(this).Handle;
         int preference = 2;
         DwmSetWindowAttribute(hwnd, 33, ref preference, sizeof(int));
+
+        RestoreWindowBounds();
     }
-    #endregion
+
+    private void RestoreWindowBounds()
+    {
+        var w = AppSettings.Current.Window;
+
+        if (w.Width > 0) Width = w.Width;
+        if (w.Height > 0) Height = w.Height;
+
+        if (w.Left.HasValue && w.Top.HasValue)
+        {
+            var rect = new Rect(w.Left.Value, w.Top.Value, Width, Height);
+            var onScreen =
+                SystemParameters.VirtualScreenLeft <= rect.Left &&
+                rect.Right <= SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth &&
+                SystemParameters.VirtualScreenTop <= rect.Top &&
+                rect.Bottom <= SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight;
+
+            if (onScreen)
+            {
+                WindowStartupLocation = WindowStartupLocation.Manual;
+                Left = w.Left.Value;
+                Top = w.Top.Value;
+            }
+        }
+
+        if (w.State == WindowState.Maximized)
+            WindowState = WindowState.Maximized;
+    }
+
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        var bounds = WindowState == WindowState.Normal
+            ? new Rect(Left, Top, Width, Height)
+            : RestoreBounds;
+
+        AppSettings.Current.Window.Width = bounds.Width;
+        AppSettings.Current.Window.Height = bounds.Height;
+        AppSettings.Current.Window.Left = bounds.Left;
+        AppSettings.Current.Window.Top = bounds.Top;
+        AppSettings.Current.Window.State = WindowState == WindowState.Minimized
+            ? WindowState.Normal
+            : WindowState;
+
+        PersistPlaybackPosition();
+
+        AppSettings.Save();
+
+        base.OnClosing(e);
+    }
 
     private async Task InitializeAuthAsync()
     {
@@ -99,8 +156,19 @@ public partial class MainWindow : Window
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
+        PersistPlaybackPosition();
         Navigator.DisposeShell();
         Close();
+    }
+
+    private void PersistPlaybackPosition()
+    {
+        var playback = Navigator.Playback;
+        if (playback?.CurrentTrack == null) return;
+
+        AppSettings.Current.Playback.LastTrackPosition =
+            playback.CurrentPosition.TotalSeconds;
+        AppSettings.Save();
     }
     #endregion
 
