@@ -194,7 +194,7 @@ public sealed class AppSession : ViewModelBase
     {
         IsLoading = true;
 
-        var previousId = SelectedPlaylist?.Id;
+        var previousId = AppSettings.Current.Ux.LastOpenedPlaylistId;
 
         _suppressAutoSwap = true;
         try
@@ -212,8 +212,6 @@ public sealed class AppSession : ViewModelBase
             foreach (var p in result.Data)
                 Playlists.Add(p);
 
-            // Synchronous fast path: set cached path BEFORE the async build runs,
-            // so the first render of the tile already has a source.
             foreach (var p in Playlists)
             {
                 var cached = PlaylistCoverCache.TryGetCached(p.Id);
@@ -221,18 +219,49 @@ public sealed class AppSession : ViewModelBase
                     p.CachedCoverPath = cached;
             }
 
-            // Always run the async build. No-op when the cached version matches
-            // the current thumbnail set; rebuilds and repoints when it doesn't.
             foreach (var p in Playlists)
                 _ = PopulateCoverAsync(p);
 
             if (previousId.HasValue)
-                SelectedPlaylist = Playlists.FirstOrDefault(p => p.Id == previousId.Value);
+            {
+                var match = Playlists.FirstOrDefault(p => p.Id == previousId.Value);
+                if (match != null)
+                    await RestorePlaybackAsync(match);
+            }
         }
         finally
         {
             _suppressAutoSwap = false;
         }
+    }
+
+    private async Task RestorePlaybackAsync(PlaylistResponse playlist)
+    {
+        var lastTrackId = AppSettings.Current.Playback.LastTrackId;
+        if (lastTrackId == null) return;
+
+        // Don't clobber an already-playing track (e.g. re-entrant LoadPlaylistsAsync).
+        if (Playback.CurrentTrack != null) return;
+
+        // Load this playlist's tracks without navigating or selecting the playlist,
+        // so the main pane stays on Library but the playback bar can be populated.
+        var result = await Repo.GetPlaylistDetailAsync(playlist.Id);
+        if (!result.Success || result.Data == null) return;
+
+        var track = result.Data.Tracks.FirstOrDefault(t => t.Id == lastTrackId.Value);
+        if (track == null) return;
+
+        var row = new TrackRowViewModel(
+            track, playlist.Name,
+            OnRowPlayRequested,
+            OnRowMoreRequested,
+            OnRowRenameRequested,
+            OnRowRemoveRequested,
+            OnRowDownloadRequested,
+            OnRowRemoveDownloadRequested);
+
+        // Loaded row, not part of SelectedPlaylistTracks — playback bar only.
+        Playback.RestoreTrack(row);
     }
 
     private static async Task PopulateCoverAsync(PlaylistResponse p)

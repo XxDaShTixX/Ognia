@@ -39,8 +39,9 @@ public sealed class AppNavigator : IAppNavigator
 
     public void ShowLibrary()
     {
-        _session!.SelectedPlaylist = null;
-        _session.SelectedTrack = null;
+        // Leave SelectedPlaylist alone; the Library view doesn't care, and it
+        // preserves the id used to restore the playback bar on next launch.
+        _session!.SelectedTrack = null;
         MainContentChanged?.Invoke(new LibraryView
         {
             DataContext = new LibraryViewModel(_session, this)
@@ -50,6 +51,10 @@ public sealed class AppNavigator : IAppNavigator
     public void ShowPlaylist(PlaylistResponse playlist)
     {
         _session!.SelectedPlaylist = playlist;
+
+        AppSettings.Current.Ux.LastOpenedPlaylistId = playlist.Id;
+        AppSettings.Save();
+
         MainContentChanged?.Invoke(new PlaylistView
         {
             DataContext = new PlaylistViewModel(_session, this)
@@ -207,9 +212,8 @@ public sealed class AppNavigator : IAppNavigator
 
         _rightVm.Refresh();
 
-        RightContentChanged?.Invoke(_session.SelectedTrack != null
-            ? new TrackDetailsView { DataContext = _rightVm }
-            : null);
+        var show = _session.SelectedTrack != null;
+        RightContentChanged?.Invoke(show ? new TrackDetailsView { DataContext = _rightVm } : null);
     }
 
     public void DisposeShell()
