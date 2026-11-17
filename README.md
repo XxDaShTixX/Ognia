@@ -93,7 +93,7 @@ cd Frontend
 dotnet run
 ```
 
-The client connects to `https://localhost:7235` (edit `Frontend/Helpers/ApiConfig.cs` to change it).
+The client connects to `https://localhost:7235` by default. To change it, set `api.baseUrl` in `%LOCALAPPDATA%\Ognia\settings.json` after first launch (or edit `ApiSettings.BaseUrl` in `Frontend/Helpers/AppSettings.cs` before building).
 
 ### 🎧 First use
 
@@ -111,7 +111,7 @@ The client connects to `https://localhost:7235` (edit `Frontend/Helpers/ApiConfi
 
 | File | Purpose |
 |---|---|
-| `settings.json` | Music root path, active theme, app mode |
+| `settings.json` | App mode, active theme, music root; playback state (volume, repeat, shuffle, last track + position); window geometry; last opened playlist |
 | `token.json` | JWT + refresh token + expiry |
 | `library.json` | Guest-mode playlists and tracks |
 | `Themes/` | Theme JSON files (seeded from embedded defaults) |
