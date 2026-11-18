@@ -8,8 +8,9 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>Ognia.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
     <ApplicationIcon>Assets\Icon\app.ico</ApplicationIcon>
+    <StartupObject>Ognia.Frontend.Program</StartupObject>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <Resource Include="Assets\Icon\app.ico" />
     <Resource Include="Assets\Icon\app.png" />
@@ -24,6 +25,7 @@
 
   <ItemGroup>
     <PackageReference Include="NAudio" Version="3.3.0" />
+    <PackageReference Include="Velopack" Version="1.2.161" />
     <PackageReference Include="YoutubeExplode" Version="6.6.3" />
   </ItemGroup>
 
