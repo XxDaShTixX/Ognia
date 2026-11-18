@@ -5,7 +5,7 @@ namespace Ognia.Frontend.Helpers;
 public static class AppPaths
 {
     public static string AppDataFolder =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ognia");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ognia");
 
     public static string DefaultMusicRoot =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), "Ognia");
