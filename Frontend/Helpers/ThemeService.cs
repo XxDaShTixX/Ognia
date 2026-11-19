@@ -21,6 +21,7 @@ public sealed class ThemeInfo : IEquatable<ThemeInfo>
     public override int GetHashCode()
         => StringComparer.OrdinalIgnoreCase.GetHashCode(FileName);
 }
+
 public sealed class ThemeFile
 {
     public string Name { get; set; } = "Untitled";
@@ -51,7 +52,7 @@ public static class ThemeService
         Directory.CreateDirectory(ThemesFolder);
         SeedDefaultsIfMissing();
 
-        var active = AppSettings.Current.ActiveTheme;
+        var active = AppSettings.Instance.ActiveTheme;
         if (string.IsNullOrWhiteSpace(active) ||
             !File.Exists(Path.Combine(ThemesFolder, active)))
         {
@@ -69,8 +70,8 @@ public static class ThemeService
                 "Ensure at least Default.json, Dark.json, and Light.json exist.");
 
         // Persist whatever was actually applied — never the requested name if it failed.
-        AppSettings.Current.ActiveTheme = ActiveThemeFileName ?? "Default.json";
-        AppSettings.Save();
+        AppSettings.Instance.ActiveTheme = ActiveThemeFileName ?? "Default.json";
+        AppSettings.Instance.Save();
     }
 
     /// <summary>

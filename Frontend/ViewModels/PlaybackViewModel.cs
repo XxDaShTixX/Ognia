@@ -33,7 +33,7 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
         _positionTimer.Start();
 
         // Restore last-used state.
-        var saved = AppSettings.Current.Playback;
+        var saved = AppSettings.Instance.Playback;
         _volume = Math.Clamp(saved.Volume, 0.0, 1.0);
         _waveOut.Volume = (float)_volume;
         _repeatMode = saved.RepeatMode;
@@ -71,10 +71,10 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
             _currentTrack = value;
             if (_currentTrack != null) _currentTrack.IsPlaying = true;
 
-            AppSettings.Current.Playback.LastTrackId = value?.Id;
+            AppSettings.Instance.Playback.LastTrackId = value?.Id;
             if (_pendingRestorePosition == TimeSpan.Zero)
-                AppSettings.Current.Playback.LastTrackPosition = 0;
-            AppSettings.Save();
+                AppSettings.Instance.Playback.LastTrackPosition = 0;
+            AppSettings.Instance.Save();
 
             OnPropertyChanged();
             CommandManager.InvalidateRequerySuggested();
@@ -173,8 +173,8 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
                     OnPropertyChanged(nameof(VolumeIcon));
                 }
 
-                AppSettings.Current.Playback.Volume = value;
-                AppSettings.Save();
+                AppSettings.Instance.Playback.Volume = value;
+                AppSettings.Instance.Save();
             }
         }
     }
@@ -230,8 +230,8 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
                 OnPropertyChanged(nameof(RepeatLabel));
                 CommandManager.InvalidateRequerySuggested();
 
-                AppSettings.Current.Playback.RepeatMode = value;
-                AppSettings.Save();
+                AppSettings.Instance.Playback.RepeatMode = value;
+                AppSettings.Instance.Save();
             }
         }
     }
@@ -247,8 +247,8 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
                 OnPropertyChanged(nameof(ShuffleLabel));
                 CommandManager.InvalidateRequerySuggested();
 
-                AppSettings.Current.Playback.Shuffle = value;
-                AppSettings.Save();
+                AppSettings.Instance.Playback.Shuffle = value;
+                AppSettings.Instance.Save();
             }
         }
     }
@@ -499,7 +499,7 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
     public void RestoreTrack(TrackRowViewModel track)
     {
         _pendingRestorePosition = TimeSpan.FromSeconds(
-            Math.Max(0, AppSettings.Current.Playback.LastTrackPosition));
+            Math.Max(0, AppSettings.Instance.Playback.LastTrackPosition));
 
         CurrentTrack = track;
 
@@ -593,8 +593,8 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
     {
         if (_currentTrack == null) return;
 
-        AppSettings.Current.Playback.LastTrackPosition = CurrentPosition.TotalSeconds;
-        AppSettings.Save();
+        AppSettings.Instance.Playback.LastTrackPosition = CurrentPosition.TotalSeconds;
+        AppSettings.Instance.Save();
     }
 
     public void Dispose()

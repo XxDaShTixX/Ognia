@@ -21,10 +21,7 @@ public class YouTubeAudioDownloader
         IProgress<double>? progress = null,
         CancellationToken ct = default)
     {
-        var root = AppSettings.Current.MusicRootFolder;
-        if (string.IsNullOrWhiteSpace(root))
-            throw new InvalidOperationException("Music root folder is not configured.");
-
+        var root = AppPaths.MusicFolder;
         var folder = Path.Combine(root, LocalLibrary.SanitizeFolderName(model.PlaylistName));
         Directory.CreateDirectory(folder);
 

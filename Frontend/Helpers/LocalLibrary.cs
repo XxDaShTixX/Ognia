@@ -1,10 +1,11 @@
-﻿using Ognia.Frontend.Helpers;
-using System.IO;
+﻿using System.IO;
 
 namespace Ognia.Frontend.Helpers;
 
 public static class LocalLibrary
 {
+    private static string Root => AppPaths.MusicFolder;
+
     #region Naming
 
     /// <summary>Strips characters Windows disallows in filenames.</summary>
@@ -27,13 +28,10 @@ public static class LocalLibrary
 
     #region Paths
 
-    private static string? Root => AppSettings.Current.MusicRootFolder;
-
     private static string? PlaylistFolder(string playlistName)
     {
-        var root = Root;
-        if (string.IsNullOrWhiteSpace(root)) return null;
-        return Path.Combine(root, SanitizeFolderName(playlistName));
+        if (string.IsNullOrWhiteSpace(Root)) return null;
+        return Path.Combine(Root, SanitizeFolderName(playlistName));
     }
 
     /// <summary>Returns the playlist's folder path if it exists, otherwise null.</summary>
@@ -47,9 +45,8 @@ public static class LocalLibrary
     /// <summary>Returns the playlist's thumbnail folder path (may not exist).</summary>
     public static string? ThumbnailFolder(string playlistName)
     {
-        var root = AppSettings.Current.MusicRootFolder;
-        if (string.IsNullOrWhiteSpace(root)) return null;
-        return Path.Combine(root, SanitizeFolderName(playlistName), ".thumbnails");
+        if (string.IsNullOrWhiteSpace(Root)) return null;
+        return Path.Combine(Root, SanitizeFolderName(playlistName), ".thumbnails");
     }
 
     #endregion
@@ -133,11 +130,10 @@ public static class LocalLibrary
     /// <summary>Renames a playlist's folder. No-op if the old folder does not exist.</summary>
     public static bool RenamePlaylistFolder(string oldName, string newName)
     {
-        var root = Root;
-        if (string.IsNullOrWhiteSpace(root)) return false;
+        if (string.IsNullOrWhiteSpace(Root)) return false;
 
-        var oldFolder = Path.Combine(root, SanitizeFolderName(oldName));
-        var newFolder = Path.Combine(root, SanitizeFolderName(newName));
+        var oldFolder = Path.Combine(Root, SanitizeFolderName(oldName));
+        var newFolder = Path.Combine(Root, SanitizeFolderName(newName));
 
         if (string.Equals(oldFolder, newFolder, StringComparison.OrdinalIgnoreCase))
             return false;

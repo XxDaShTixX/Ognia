@@ -1,32 +1,18 @@
 ﻿using Ognia.Frontend.Helpers;
-using System.IO;
+using Ognia.Frontend.Services;
 using System.Windows;
-using Velopack;
-using Velopack.Sources;
 
 namespace Ognia.Frontend;
 
 public partial class App : Application
 {
-    private static UpdateManager? _updateManager;
-    private static UpdateInfo? _pendingUpdate;
-
     protected override void OnStartup(StartupEventArgs e)
     {
         try
         {
             base.OnStartup(e);
 
-            AppPaths.EnsureAppDataFolder();
-
-            if (string.IsNullOrWhiteSpace(AppSettings.Current.MusicRootFolder))
-            {
-                AppSettings.Current.MusicRootFolder = AppPaths.DefaultMusicRoot;
-                AppSettings.Save();
-            }
-
-            Directory.CreateDirectory(AppSettings.Current.MusicRootFolder);
-
+            AppPaths.Initialize();
             ThemeService.Initialize();
 
             System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level =
@@ -36,7 +22,8 @@ public partial class App : Application
 
             new MainWindow().Show();
 
-            _ = CheckForUpdatesAsync();
+            if (AppSettings.Instance.Update.AutoUpdateEnabled)
+                _ = UpdateService.Instance.CheckAsync(downloadIfFound: true);
         }
         catch (Exception ex)
         {
@@ -45,41 +32,10 @@ public partial class App : Application
         }
     }
 
-    private static async Task CheckForUpdatesAsync()
-    {
-        try
-        {
-            var mgr = new UpdateManager(
-                new GithubSource(
-                    "https://github.com/XxDaShTixX/Ognia", 
-                    accessToken: null, 
-                    prerelease: true));
-
-            if (!mgr.IsInstalled) return;
-
-            var newVersion = await mgr.CheckForUpdatesAsync();
-            if (newVersion == null) return;
-
-            await mgr.DownloadUpdatesAsync(newVersion);
-
-            _updateManager = mgr;
-            _pendingUpdate = newVersion;
-        }
-        catch { }
-    }
-
     protected override void OnExit(ExitEventArgs e)
     {
-        if (_updateManager != null && _pendingUpdate != null)
-        {
-            try { 
-                _updateManager.WaitExitThenApplyUpdates(
-                _pendingUpdate, 
-                silent: true, 
-                restart: false); 
-            }
-            catch { }
-        }
+        if (AppSettings.Instance.Update.AutoUpdateEnabled)
+            UpdateService.Instance.ApplyOnExit();
 
         base.OnExit(e);
     }

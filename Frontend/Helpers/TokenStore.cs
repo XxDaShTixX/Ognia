@@ -8,43 +8,42 @@ public static class TokenStore
     private static readonly string TokenPath =
         Path.Combine(AppPaths.AppDataFolder, "token.json");
 
-    private static PersistedToken? _current;
+    private static PersistedToken? _instance;
 
-    private static PersistedToken? Current
+    private static PersistedToken? Instance
     {
         get
         {
-            if (_current != null) return _current;
-            _current = Load();
-            return _current;
+            if (_instance != null) return _instance;
+            _instance = Load();
+            return _instance;
         }
     }
 
-    public static string? Token => Current?.Token;
-    public static string? Email => Current?.Email;
-    public static string? RefreshToken => Current?.RefreshToken;
-    public static DateTime? AccessTokenExpiresAt => Current?.AccessTokenExpiresAt;
+    public static string? Token => Instance?.Token;
+    public static string? Email => Instance?.Email;
+    public static string? RefreshToken => Instance?.RefreshToken;
+    public static DateTime? AccessTokenExpiresAt => Instance?.AccessTokenExpiresAt;
 
-    public static bool IsAuthenticated =>
-    Current != null
-    && !string.IsNullOrEmpty(Current.Token)
-    && !string.IsNullOrEmpty(Current.RefreshToken);
+    public static bool IsAuthenticated => Instance != null
+        && !string.IsNullOrEmpty(Instance.Token)
+        && !string.IsNullOrEmpty(Instance.RefreshToken);
 
     public static void Set(string token, string email, DateTime accessTokenExpiresAt, string refreshToken)
     {
-        _current = new PersistedToken
+        _instance = new PersistedToken
         {
             Token = token,
             Email = email,
             AccessTokenExpiresAt = DateTime.SpecifyKind(accessTokenExpiresAt, DateTimeKind.Utc),
             RefreshToken = refreshToken
         };
-        Save(_current);
+        Save(_instance);
     }
 
     public static void Clear()
     {
-        _current = null;
+        _instance = null;
         try { if (File.Exists(TokenPath)) File.Delete(TokenPath); } catch { }
     }
 
