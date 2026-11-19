@@ -71,8 +71,7 @@ public partial class SettingsView : UserControl
         var (success, error, tempPath) = await _vm.PrepareUpgradeAsync();
         if (!success)
         {
-            _vm.IsError = true;
-            _vm.StatusMessage = error ?? "Upgrade failed.";
+            _vm.Session.SetError(error ?? "Upgrade failed.");
             return;
         }
 
@@ -80,7 +79,7 @@ public partial class SettingsView : UserControl
             $"Your library has been backed up to:\n{tempPath}\n\n" +
             "You'll be taken to the login screen. Register or log in, " +
             "and your library will be uploaded automatically.",
-            "Upgrade to account",
+            "Upgrade to Account",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
 

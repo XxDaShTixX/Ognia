@@ -52,8 +52,8 @@ public sealed class AppNavigator : IAppNavigator
     {
         _session!.SelectedPlaylist = playlist;
 
-        AppSettings.Current.Ux.LastOpenedPlaylistId = playlist.Id;
-        AppSettings.Save();
+        AppSettings.Instance.Ux.LastOpenedPlaylistId = playlist.Id;
+        AppSettings.Instance.Save();
 
         MainContentChanged?.Invoke(new PlaylistView
         {
@@ -85,8 +85,8 @@ public sealed class AppNavigator : IAppNavigator
 
     public void EnterGuestMode()
     {
-        AppSettings.Current.Mode = Enums.AppMode.Guest;
-        AppSettings.Save();
+        AppSettings.Instance.Mode = Enums.AppMode.Guest;
+        AppSettings.Instance.Save();
         ShowShell(new LocalMusicRepo());
     }
 
@@ -104,10 +104,10 @@ public sealed class AppNavigator : IAppNavigator
     {
         DisposeShell();
 
-        if (AppSettings.Current.Mode == Enums.AppMode.Guest)
+        if (AppSettings.Instance.Mode == Enums.AppMode.Guest)
         {
-            AppSettings.Current.Mode = null;
-            AppSettings.Save();
+            AppSettings.Instance.Mode = null;
+            AppSettings.Instance.Save();
         }
 
         TokenStore.Clear();
@@ -129,8 +129,8 @@ public sealed class AppNavigator : IAppNavigator
     public void BeginUpgrade(string backupPath)
     {
         _pendingUpgradePath = backupPath;
-        AppSettings.Current.Mode = null;
-        AppSettings.Save();
+        AppSettings.Instance.Mode = null;
+        AppSettings.Instance.Save();
         ShowLogin();
     }
 

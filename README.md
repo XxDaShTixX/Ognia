@@ -1,7 +1,7 @@
 # 🔥 Ognia
 
 <p align="center">
-  <img src="Frontend/Assets/Icon/app.png" alt="Ognia logo" width="200"/>
+  <img src="Frontend/Assets/Brand/Icon/Ognia.png" alt="Ognia logo" width="200"/>
 </p>
 
 A Windows music player that turns YouTube links into a local, offline-capable library. Personal learning project — ASP.NET Core backend for accounts and metadata, WPF client that downloads and plays audio.
@@ -10,7 +10,7 @@ A Windows music player that turns YouTube links into a local, offline-capable li
 
 | Login | Library |
 |:---:|:---:|
-| <img src="https://github.com/user-attachments/assets/8c0e4531-face-4a9d-afd7-60c2c8fa8c06" width="400"/> | <img src="https://github.com/user-attachments/assets/3165d5d5-70d2-4b0a-b6d2-30e3b888feab" width="400"/> |
+| <img src="https://github.com/user-attachments/assets/86eeb897-f972-4196-b861-edccf7a2a38b" width="400" /> | <img src="https://github.com/user-attachments/assets/3165d5d5-70d2-4b0a-b6d2-30e3b888feab" width="400"/> |
 
 | Playlist | Settings |
 |:---:|:---:|

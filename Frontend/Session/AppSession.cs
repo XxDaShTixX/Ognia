@@ -194,7 +194,7 @@ public sealed class AppSession : ViewModelBase
     {
         IsLoading = true;
 
-        var previousId = AppSettings.Current.Ux.LastOpenedPlaylistId;
+        var previousId = AppSettings.Instance.Ux.LastOpenedPlaylistId;
 
         _suppressAutoSwap = true;
         try
@@ -237,7 +237,7 @@ public sealed class AppSession : ViewModelBase
 
     private async Task RestorePlaybackAsync(PlaylistResponse playlist)
     {
-        var lastTrackId = AppSettings.Current.Playback.LastTrackId;
+        var lastTrackId = AppSettings.Instance.Playback.LastTrackId;
         if (lastTrackId == null) return;
 
         // Don't clobber an already-playing track (e.g. re-entrant LoadPlaylistsAsync).

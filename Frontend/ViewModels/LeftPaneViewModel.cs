@@ -29,7 +29,7 @@ public sealed class LeftPaneViewModel : ViewModelBase
     {
         get
         {
-            var who = AppSettings.Current.Mode == AppMode.Guest
+            var who = AppSettings.Instance.Mode == AppMode.Guest
                 ? "Guest"
                 : TokenStore.Email ?? "Guest";
             return $"Welcome, {who}";

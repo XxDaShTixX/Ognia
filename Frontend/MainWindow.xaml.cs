@@ -18,17 +18,20 @@ public partial class MainWindow : Window
     public ApiClientService Api { get; }
     public IAppNavigator Navigator { get; }
 
+    public string AppNameVersion = $"Ognia v{AppSettings.Instance.Version}";
+
     public MainWindow()
     {
         InitializeComponent();
         Current = this;
 
-        Api = new ApiClientService(AppSettings.Current.Api.BaseUrl);
+        Api = new ApiClientService(AppSettings.Instance.Api.BaseUrl);
         Navigator = new AppNavigator(Api, view => MainContent.Content = view);
 
         Api.Unauthorized += OnUnauthorized;
 
         _ = InitializeAuthAsync();
+
     }
 
     /// <summary>
@@ -54,7 +57,7 @@ public partial class MainWindow : Window
 
     private void RestoreWindowBounds()
     {
-        var w = AppSettings.Current.Window;
+        var w = AppSettings.Instance.Window;
 
         if (w.Width > 0) Width = w.Width;
         if (w.Height > 0) Height = w.Height;
@@ -69,22 +72,22 @@ public partial class MainWindow : Window
             ? new Rect(Left, Top, Width, Height)
             : RestoreBounds;
 
-        AppSettings.Current.Window.Width = bounds.Width;
-        AppSettings.Current.Window.Height = bounds.Height;
-        AppSettings.Current.Window.State = WindowState == WindowState.Minimized
+        AppSettings.Instance.Window.Width = bounds.Width;
+        AppSettings.Instance.Window.Height = bounds.Height;
+        AppSettings.Instance.Window.State = WindowState == WindowState.Minimized
             ? WindowState.Normal
             : WindowState;
 
         PersistPlaybackPosition();
 
-        AppSettings.Save();
+        AppSettings.Instance.Save();
 
         base.OnClosing(e);
     }
 
     private async Task InitializeAuthAsync()
     {
-        if (AppSettings.Current.Mode == AppMode.Guest)
+        if (AppSettings.Instance.Mode == AppMode.Guest)
         {
             Navigator.EnterGuestMode();
             return;
@@ -147,9 +150,9 @@ public partial class MainWindow : Window
         var playback = Navigator.Playback;
         if (playback?.CurrentTrack == null) return;
 
-        AppSettings.Current.Playback.LastTrackPosition =
+        AppSettings.Instance.Playback.LastTrackPosition =
             playback.CurrentPosition.TotalSeconds;
-        AppSettings.Save();
+        AppSettings.Instance.Save();
     }
     #endregion
 
@@ -207,7 +210,7 @@ public partial class MainWindow : Window
         var mini = new MiniPlayerView { DataContext = barVm };
         MainContent.Content = mini;
 
-        Opacity = AppSettings.Current.Window.MiniRestingOpacity;
+        Opacity = AppSettings.Instance.Window.MiniRestingOpacity;
         MouseEnter += Mini_HoverEnter;
         MouseLeave += Mini_HoverLeave;
 
@@ -258,7 +261,7 @@ public partial class MainWindow : Window
         _miniFadeTimer.Tick += (_, _) =>
         {
             StopMiniFadeTimer();
-            AnimateWindowOpacity(AppSettings.Current.Window.MiniRestingOpacity, MiniFadeOut);
+            AnimateWindowOpacity(AppSettings.Instance.Window.MiniRestingOpacity, MiniFadeOut);
         };
         _miniFadeTimer.Start();
     }
