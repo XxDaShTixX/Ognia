@@ -1,22 +1,43 @@
 # 🔥 Ognia
 
 <p align="center">
-  <img src="Frontend/Assets/Icon/app.png" alt="Ognia logo" width="200"/>
+  <img src="Frontend/Assets/Brand/Icon/Ognia.png" alt="Ognia logo" width="200"/>
 </p>
 
 A Windows music player that turns YouTube links into a local, offline-capable library. Personal learning project — ASP.NET Core backend for accounts and metadata, WPF client that downloads and plays audio.
 
+## Screenshots
+
+| Login | Library |
+|:---:|:---:|
+| <img src="https://github.com/user-attachments/assets/86eeb897-f972-4196-b861-edccf7a2a38b" width="400" /> | <img src="https://github.com/user-attachments/assets/3165d5d5-70d2-4b0a-b6d2-30e3b888feab" width="400"/> |
+
+| Playlist | Settings |
+|:---:|:---:|
+| <img src="https://github.com/user-attachments/assets/d16d8f42-f1f8-4e40-8271-2846e2eb0544" width="400"/> | <img width="400" src="https://github.com/user-attachments/assets/f596fd7b-c906-4f42-91bc-65e44477b395" /> |
+
+| Mini Player (Active) | Mini Player (Inactive) |
+|:---:|:---:|
+| <img width="400" alt="image" src="https://github.com/user-attachments/assets/59c66794-54da-4a83-97c7-122b9f219ace" /> | <img width="400" src="https://github.com/user-attachments/assets/f50fdd56-57e3-4069-ad65-88450d97ecf1" /> |
+
+
+
 ## ✨ Features
 
 - Email/password accounts with JWT + refresh tokens
+- Forgot password / reset password / change password
 - Guest mode: use the app with no backend, stored locally
+- Guest-to-account upgrade (uploads the local library on first login)
+- Export / import the guest library as JSON
 - Playlists: create, rename, delete, reorder
 - Tracks: add by URL, rename, remove
 - Download audio to a local folder, play offline
 - Play/pause, stop, next/previous, seek, volume, mute
 - Repeat (off/all/one) and shuffle
 - Download all tracks in a playlist, with status bar progress
-- Themes: Default, Dark, Light, Purple (JSON-based, user-editable)
+- Auto-generated 2×2 playlist covers from track thumbnails
+- Mini player: compact, always-on-top window with hover-to-reveal fade
+- Themes: Default, Dark, Light (JSON-based, user-editable)
 
 ## 🏗️ Architecture
 
@@ -32,7 +53,7 @@ A Windows music player that turns YouTube links into a local, offline-capable li
   + themes + cache                    tracks, tokens)
 ```
 
-The backend owns users, playlists, and track metadata. The client owns local audio files, settings, themes, and (in guest mode) a local library. The backend never handles audio bytes — the client downloads directly from YouTube via `YoutubeExplode`.
+The backend owns users, playlists, and track metadata. The client owns local audio files, settings, themes, and (in guest mode) a local library. The backend never handles audio bytes — the client downloads directly from YouTube via `YoutubeExplode`. Metadata lookups (title, duration, thumbnail) also go through `YoutubeExplode`: the backend does them on behalf of logged-in users, and the client does them locally in guest mode.
 
 ## 🧰 Tech stack
 
@@ -72,7 +93,7 @@ cd Frontend
 dotnet run
 ```
 
-The client connects to `https://localhost:7235` (edit `Frontend/Helpers/ApiConfig.cs` to change it).
+The client connects to `https://localhost:7235` by default. To change it, set `api.baseUrl` in `%LOCALAPPDATA%\Ognia\settings.json` after first launch (or edit `ApiSettings.BaseUrl` in `Frontend/Helpers/AppSettings.cs` before building).
 
 ### 🎧 First use
 
@@ -90,7 +111,7 @@ The client connects to `https://localhost:7235` (edit `Frontend/Helpers/ApiConfi
 
 | File | Purpose |
 |---|---|
-| `settings.json` | Music root path, active theme, app mode |
+| `settings.json` | App mode, active theme, music root; playback state (volume, repeat, shuffle, last track + position); window geometry; last opened playlist |
 | `token.json` | JWT + refresh token + expiry |
 | `library.json` | Guest-mode playlists and tracks |
 | `Themes/` | Theme JSON files (seeded from embedded defaults) |
@@ -108,9 +129,9 @@ Each track has a `(SourceName, SourceId)` pair — e.g. `("youtube", "dQw4w9WgXc
 
 ### ➕ Adding a new source
 
-Implement `ITrackSourceService` in the backend (see `Backend/Services/TrackSourceService/`), add a `TrackSource` enum member, add its wire name to `TrackSourceExtensions`, and register it in `Program.cs`. The add-track endpoint calls `CanHandle` on every registered service and picks the first that matches.
+Implement `ITrackSourceService` in the backend (see `Backend/Services/TrackSourceService/`), add a `TrackSource` enum member, add its wire name to `TrackSourceExtensions`, and register it in `Program.cs`.
 
-**Spotify is not supported as a download source.** Spotify's Developer Terms prohibit downloading content, and the Web API exposes only 30-second previews. Spotify could be added as a *metadata-only* source (cataloging and linking), but not as playback — that would need the Web Playback SDK in a WebView, Spotify Premium, and OAuth.
+Note: the backend currently registers a single `ITrackSourceService` (`YouTubeTrackSourceService`) and the add-track endpoint uses that one instance directly. To support multiple sources, change the registration to a collection (`IEnumerable<ITrackSourceService>`) and update the endpoint to dispatch by `CanHandle(url)` — the interface is already designed for this.
 
 ## 🤝 Contributing
 

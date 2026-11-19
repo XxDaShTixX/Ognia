@@ -9,7 +9,7 @@
         Background="Transparent"
         WindowStyle="None"
         AllowsTransparency="True"
-        Icon="/Assets/Icon/app.ico">
+        Icon="/Assets/Brand/Icon/Ognia.ico">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="30"
                       ResizeBorderThickness="8"

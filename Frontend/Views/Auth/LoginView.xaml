@@ -10,7 +10,7 @@
                         MaxWidth="500"
                         Visibility="{Binding ShowLanding, Converter={StaticResource BoolToVisibility}}">
 
-                <Image Source="/Assets/Icon/app.png"
+                <Image Source="/Assets/Brand/Logo/Ognia.png"
                        Width="300" Height="300"
                        HorizontalAlignment="Center"
                        Margin="0,0,0,10"
@@ -26,6 +26,7 @@
                         Command="{Binding ShowLoginFormCommand}"
                         Style="{StaticResource PrimaryButton}"
                         Width="240"
+                        IsEnabled="False"
                         HorizontalAlignment="Center"/>
             </StackPanel>
 
@@ -43,7 +44,7 @@
                         Width="40" Height="40"
                         ToolTip="Back"/>
 
-                <Image Source="/Assets/Icon/app.png"
+                <Image Source="/Assets/Brand/Logo/Ognia.png"
                        Width="56" Height="56"
                        HorizontalAlignment="Center"
                        Margin="0,0,0,10"
