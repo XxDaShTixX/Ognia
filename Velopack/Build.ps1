@@ -15,7 +15,7 @@ if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
 dotnet publish $project -c Release -r win-x64 --self-contained true -o $publishDir
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed." }
 
-vpk pack --packId Ognia --packVersion $Version --packDir $publishDir --outputDir $outputDir --runtime win-x64 --channel win --icon "..\Frontend\Assets\Icon\app.ico" --mainExe Frontend.exe
+vpk pack --packId Ognia --packVersion $Version --packDir $publishDir --outputDir $outputDir --runtime win-x64 --channel win --icon "..\Frontend\Assets\Brand\Icon\Ognia.ico" --mainExe Frontend.exe
 
 if ($LASTEXITCODE -ne 0) { throw "vpk pack failed." }
 

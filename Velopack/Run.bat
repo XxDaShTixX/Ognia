@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-set /p VERSION=Version (e.g. 0.0.2): 
+set /p VERSION=Version (e.g. "0.0.1", "0.0.1-alpha.1"): 
 if "%VERSION%"=="" (
     echo No version entered.
     pause
