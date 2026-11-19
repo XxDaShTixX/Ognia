@@ -1,7 +1,7 @@
 # 🔥 Ognia
 
 <p align="center">
-  <img src="Frontend/Assets/Brand/Icon/Ognia.png" alt="Ognia logo" width="200"/>
+  <img src="/Frontend/Assets/Brand/Logo/Ognia.png" alt="Ognia logo" width="200"/>
 </p>
 
 A Windows music player that turns YouTube links into a local, offline-capable library. Personal learning project — ASP.NET Core backend for accounts and metadata, WPF client that downloads and plays audio.
