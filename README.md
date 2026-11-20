@@ -24,13 +24,14 @@ A Windows music player that turns YouTube links into a local, offline-capable li
 
 ## ✨ Features
 
-- Email/password accounts with JWT + refresh tokens
-- Forgot password / reset password / change password
+### 🖥️ Windows Presentation Foundation (WPF) client
+
 - Guest mode: use the app with no backend, stored locally
 - Guest-to-account upgrade (uploads the local library on first login)
 - Export / import the guest library as JSON
 - Playlists: create, rename, delete, reorder
 - Tracks: add by URL, rename, remove
+- Search YouTube from inside the app; preview results and add them to a playlist
 - Download audio to a local folder, play offline
 - Play/pause, stop, next/previous, seek, volume, mute
 - Repeat (off/all/one) and shuffle
@@ -38,6 +39,16 @@ A Windows music player that turns YouTube links into a local, offline-capable li
 - Auto-generated 2×2 playlist covers from track thumbnails
 - Mini player: compact, always-on-top window with hover-to-reveal fade
 - Themes: Default, Dark, Light (JSON-based, user-editable)
+- Main window and mini player opacity controls
+- Local folders section with one-click open for Music, App data, and Themes
+- Auto-update from GitHub Releases, with stable / pre-release channel selection
+
+### 🖧 Server (ASP.NET Core)
+
+- Email/password accounts with JWT + refresh tokens
+- Forgot password / reset password / change password
+- User-scoped playlists and track metadata storage
+- YouTube URL resolution and metadata lookup (title, duration, thumbnail) on behalf of logged-in users
 
 ## 🏗️ Architecture
 
@@ -58,7 +69,7 @@ The backend owns users, playlists, and track metadata. The client owns local aud
 ## 🧰 Tech stack
 
 - **Backend:** .NET 10, ASP.NET Core Web API, EF Core + SQLite, ASP.NET Core Identity, JWT bearer, Swashbuckle
-- **Frontend:** .NET 10, WPF, plain MVVM (`INotifyPropertyChanged`, `ICommand`), NAudio, `YoutubeExplode`
+- **Frontend:** .NET 10, WPF, plain MVVM (`INotifyPropertyChanged`, `ICommand`), NAudio, `YoutubeExplode`, Velopack
 
 ## 🚀 Getting started
 
@@ -67,6 +78,7 @@ The backend owns users, playlists, and track metadata. The client owns local aud
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - Windows (WPF client is Windows-only)
 - Optional: `dotnet tool install --global dotnet-ef`
+- Optional: `dotnet tool install --global vpk` (only needed to build installers)
 
 ### Backend
 
@@ -93,29 +105,47 @@ cd Frontend
 dotnet run
 ```
 
-The client connects to `https://localhost:7235` by default. To change it, set `api.baseUrl` in `%LOCALAPPDATA%\Ognia\settings.json` after first launch (or edit `ApiSettings.BaseUrl` in `Frontend/Helpers/AppSettings.cs` before building).
+The client connects to `https://localhost:7235` by default. To change it, set `api.baseUrl` in `%APPDATA%\Ognia\settings.json` after first launch (or edit `ApiSettings.BaseUrl` in `Frontend/Helpers/AppSettings.cs` before building).
 
 ### 🎧 First use
 
 1. **Continue as Guest** to try without a backend account, or register.
 2. Create a playlist.
-3. Paste a YouTube URL.
+3. Use **Search** to find a YouTube video, or **Add track** to paste a URL directly.
 4. Click **Download** to fetch audio locally.
 5. Click **Play**.
+
+### 📦 Building installers and releases
+
+Builds are packaged with [Velopack](https://velopack.io/). The `Ognia/Velopack/` folder holds the tooling:
+
+- `Run.bat` prompts for a version, publishes `Frontend`, and packs the release into `Ognia/Velopack/Releases/`.
+- `Build.ps1` is the script `Run.bat` invokes — clean publish, `vpk pack`.
+
+To cut a release:
+
+1. Run `Ognia/Velopack/Run.bat` and enter the version (e.g. `0.0.2`).
+2. Go to the GitHub Releases page, create a new tag `v<version>`, and upload **all** files from `Ognia/Velopack/Releases/` — `releases.win.json`, `assets.win.json`, `Ognia-<version>-full.nupkg`, and the installer.
+3. Publish the release as **normal**, not pre-release, for stable users. Mark it **pre-release** to only offer it to users on the pre-release channel.
+
+Installed apps check GitHub on startup, download any newer release in the background, and apply it on exit. The new version runs the next time the app launches.
 
 ## 📁 Where files live
 
 **Audio** — `%USERPROFILE%\Music\Ognia\<playlist>\<track>.m4a` (per-playlist folder).
 
-**App data** — `%LOCALAPPDATA%\Ognia\`:
+**App data** — `%APPDATA%\Ognia\`:
 
 | File | Purpose |
 |---|---|
-| `settings.json` | App mode, active theme, music root; playback state (volume, repeat, shuffle, last track + position); window geometry; last opened playlist |
+| `settings.json` | App mode, active theme; API base URL; playback state (volume, repeat, shuffle, last track + position); window geometry and opacity; update preferences; last opened playlist |
 | `token.json` | JWT + refresh token + expiry |
 | `library.json` | Guest-mode playlists and tracks |
 | `Themes/` | Theme JSON files (seeded from embedded defaults) |
 | `playlist-covers/` | Generated 2×2 cover collages |
+| `previews/` | Temporary search-result previews, wiped on exit |
+
+**Install** — `%LOCALAPPDATA%\Ognia\` (Velopack's install directory; separate from app data to avoid collisions on update).
 
 **Database** — `Backend/database.db` (SQLite, created by `dotnet ef database update`).
 
