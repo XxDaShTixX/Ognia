@@ -195,7 +195,7 @@ public sealed class SettingsViewModel : ViewModelBase
         }
     }
 
-    public bool HasUpdate => _availableVersion != null;
+    public bool HasUpdate => _availableVersion != null && _updates.PendingIsDownloaded;
 
     public string AvailableVersionText =>
         _availableVersion == null ? string.Empty : $"Update v{_availableVersion} available!";
@@ -265,7 +265,7 @@ public sealed class SettingsViewModel : ViewModelBase
         UpdateStatus = "Checking for updates…";
         try
         {
-            var version = await _updates.CheckAsync(downloadIfFound: AutoUpdateEnabled);
+            var version = await _updates.CheckAsync(downloadIfFound: true);
             if (version == null)
             {
                 AvailableVersion = null;
