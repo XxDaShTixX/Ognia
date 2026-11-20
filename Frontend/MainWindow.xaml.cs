@@ -64,6 +64,8 @@ public partial class MainWindow : Window
 
         if (w.State == WindowState.Maximized)
             WindowState = WindowState.Maximized;
+
+        Opacity = Math.Clamp(w.MainWindowOpacity, 0.01, 1.0);
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)

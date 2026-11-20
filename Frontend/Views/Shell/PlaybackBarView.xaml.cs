@@ -1,4 +1,6 @@
-﻿using Ognia.Frontend.ViewModels;
+﻿using Ognia.Frontend.Helpers;
+using Ognia.Frontend.ViewModels;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace Ognia.Frontend.Views.Shell;
@@ -26,7 +28,7 @@ public partial class PlaybackBarView : UserControl
     {
         if (DataContext is not PlaybackBarViewModel vm) return;
 
-        var url = vm.PlaybackViewModel.CurrentTrack?.SourceUrl;
+        var url = vm.PlaybackViewModel.NowPlayingSourceUrl;
         if (string.IsNullOrWhiteSpace(url)) return;
 
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo

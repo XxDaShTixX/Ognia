@@ -45,6 +45,10 @@ public sealed class SettingsViewModel : ViewModelBase
             _ => ApplyUpdate(),
             _ => HasUpdate);
 
+        OpenFolderCommand = new RelayCommand(
+            p => OpenFolder(p as string),
+            p => p is string s && !string.IsNullOrWhiteSpace(s));
+
         AvailableThemes = ThemeService.EnumerateThemes();
 
         var applied = ThemeService.ActiveThemeFileName
@@ -95,6 +99,73 @@ public sealed class SettingsViewModel : ViewModelBase
     public string ConfirmPassword { get => _confirmPassword; set { if (SetProperty(ref _confirmPassword, value)) Requery(); } }
 
     public string Email => IsGuestMode ? "(Guest)" : TokenStore.Email ?? "Unknown";
+
+    #region Appearance
+
+    public double MainWindowOpacityPercent
+    {
+        get => Math.Round(AppSettings.Instance.Window.MainWindowOpacity * 100);
+        set
+        {
+            var clamped = Math.Clamp(value, 20, 100);
+            var normalized = clamped / 100.0;
+            if (Math.Abs(AppSettings.Instance.Window.MainWindowOpacity - normalized) < 0.001) return;
+
+            AppSettings.Instance.Window.MainWindowOpacity = normalized;
+            AppSettings.Instance.Save();
+            OnPropertyChanged();
+
+            if (System.Windows.Application.Current.MainWindow is { } win)
+                win.Opacity = normalized;
+        }
+    }
+
+    public double MiniWindowOpacityPercent
+    {
+        get => Math.Round(AppSettings.Instance.Window.MiniRestingOpacity * 100);
+        set
+        {
+            var clamped = Math.Clamp(value, 1, 100);
+            var normalized = clamped / 100.0;
+            if (Math.Abs(AppSettings.Instance.Window.MiniRestingOpacity - normalized) < 0.001) return;
+
+            AppSettings.Instance.Window.MiniRestingOpacity = normalized;
+            AppSettings.Instance.Save();
+            OnPropertyChanged();
+        }
+    }
+
+    #endregion
+
+    #region Folders
+
+    public string MusicFolderPath => AppPaths.MusicFolder;
+    public string AppDataFolderPath => AppPaths.AppDataFolder;
+    public string ThemesFolderPath => AppPaths.ThemesFolder;
+
+    public RelayCommand OpenFolderCommand { get; }
+
+    private void OpenFolder(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return;
+
+        try
+        {
+            System.IO.Directory.CreateDirectory(path);
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $"\"{path}\"",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            Session.SetError($"Could not open folder: {ex.Message}");
+        }
+    }
+
+    #endregion
 
     #region Updates
 

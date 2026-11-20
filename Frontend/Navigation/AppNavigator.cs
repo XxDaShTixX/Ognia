@@ -66,7 +66,14 @@ public sealed class AppNavigator : IAppNavigator
         MainContentChanged?.Invoke(new SettingsView(_api, this, _session!));
     }
 
-    public void ShowSearch() => ShowLibrary();
+    public void ShowSearch()
+    {
+        _session!.SelectedTrack = null;
+        MainContentChanged?.Invoke(new SearchView
+        {
+            DataContext = new SearchViewModel(_session)
+        });
+    }
 
     public void ShowTrackDetails(object? _) => RefreshRightPane();
 

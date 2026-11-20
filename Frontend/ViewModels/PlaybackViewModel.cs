@@ -76,7 +76,9 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
                 AppSettings.Instance.Playback.LastTrackPosition = 0;
             AppSettings.Instance.Save();
 
-            OnPropertyChanged();
+            OnPropertyChanged(nameof(CurrentTrack));
+            OnPropertyChanged(nameof(NowPlayingThumbnail));
+            OnPropertyChanged(nameof(NowPlayingSourceUrl));
             CommandManager.InvalidateRequerySuggested();
         }
     }
@@ -142,8 +144,12 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public string PositionLabel => CurrentPosition.ToString(@"mm\:ss");
-    public string DurationLabel => TotalDuration.ToString(@"mm\:ss");
+    public string PositionLabel => FormatTime(CurrentPosition);
+    public string DurationLabel => FormatTime(TotalDuration);
+
+    private static string FormatTime(TimeSpan t) => t.TotalHours >= 1
+        ? $"{(int)t.TotalHours}:{t.Minutes:00}:{t.Seconds:00}"
+        : t.ToString(@"mm\:ss");
 
     public string NowPlaying
     {
@@ -315,6 +321,7 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
         CurrentPosition = TimeSpan.Zero;
         TotalDuration = TimeSpan.Zero;
         NowPlaying = string.Empty;
+        SetPreviewThumbnail(null);
         NotifyPlaybackChanged();
     }
 
@@ -385,6 +392,7 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
 
             _waveOut.Play();
             NowPlaying = CurrentTrack.Name;
+            SetPreviewThumbnail(null);
             NotifyPlaybackChanged();
         }
         catch (Exception ex)
@@ -392,6 +400,59 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
             ErrorOccurred?.Invoke($"Playback failed: {ex.Message}");
             Stop();
         }
+    }
+
+
+    /// <summary>
+    /// The YouTube (or other source) URL for the currently playing item.
+    /// Falls back to the preview URL when previewing from search results.
+    /// </summary>
+    public string? NowPlayingSourceUrl => CurrentTrack?.SourceUrl ?? _previewSourceUrl;
+    public string? NowPlayingThumbnail => CurrentTrack?.ThumbnailPath ?? _previewThumbnail;
+    
+    private string? _previewThumbnail;
+    private string? _previewSourceUrl;
+
+    public void PlayLocalFile(
+        string path, 
+        string displayName,
+        string? thumbnailPath = null, 
+        string? sourceUrl = null)
+    {
+        try
+        {
+            CurrentTrack = null;
+
+            _waveOut.Stop();
+            _reader?.Dispose();
+            _reader = new AudioFileReader(path);
+            _waveOut.Init(_reader);
+            TotalDuration = _reader.TotalTime;
+            CurrentPosition = TimeSpan.Zero;
+            _waveOut.Play();
+            NowPlaying = displayName;
+            SetPreviewThumbnail(thumbnailPath, sourceUrl);
+            try
+            {
+                System.IO.File.AppendAllText(
+    System.IO.Path.Combine(AppPaths.AppDataFolder, "preview.log"),
+    $"{DateTime.Now:O} path={path} thumb={thumbnailPath ?? "<null>"} preview={_previewThumbnail ?? "<null>"} currentTrack={_currentTrack?.Name ?? "<null>"}\n");
+            }
+            catch { }
+            NotifyPlaybackChanged();
+        }
+        catch (Exception ex)
+        {
+            ErrorOccurred?.Invoke($"Preview failed: {ex.Message}");
+        }
+    }
+
+    private void SetPreviewThumbnail(string? path, string? sourceUrl = null)
+    {
+        _previewThumbnail = path;
+        _previewSourceUrl = sourceUrl;
+        OnPropertyChanged(nameof(NowPlayingThumbnail));
+        OnPropertyChanged(nameof(NowPlayingSourceUrl));
     }
 
     #endregion

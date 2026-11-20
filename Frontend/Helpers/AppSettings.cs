@@ -132,6 +132,11 @@ public class WindowSettings
 {
     public double Width { get; set; } = 1200;
     public double Height { get; set; } = 800;
+
+    /// <summary>Main window opacity, 0.01–1.0.</summary>
+    public double MainWindowOpacity { get; set; } = 1.0;
+
+    /// <summary>Mini player resting opacity, 0.01–1.0.</summary>
     public double MiniRestingOpacity { get; set; } = 0.2;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]

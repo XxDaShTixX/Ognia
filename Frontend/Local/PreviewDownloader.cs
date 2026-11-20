@@ -1,0 +1,61 @@
+﻿using System.IO;
+using Ognia.Frontend.Helpers;
+using Ognia.Frontend.Models.Track;
+using YoutubeExplode;
+using YoutubeExplode.Videos.Streams;
+
+namespace Ognia.Frontend.Local;
+
+public class PreviewDownloader
+{
+    private readonly YoutubeClient _youtube = new();
+
+    public static string PreviewFolder =>
+        Path.Combine(AppPaths.AppDataFolder, "previews");
+
+    public async Task<string> DownloadAsync(
+        TrackResponse track,
+        IProgress<double>? progress = null,
+        CancellationToken ct = default)
+    {
+        Directory.CreateDirectory(PreviewFolder);
+
+        var targetPath = Path.Combine(PreviewFolder, $"{track.SourceId}.m4a");
+        if (File.Exists(targetPath)) return targetPath;
+
+        var tempPath = targetPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+
+        try
+        {
+            var manifest = await _youtube.Videos.Streams.GetManifestAsync(track.SourceId, ct);
+            var audioStream = manifest.GetAudioOnlyStreams().GetWithHighestBitrate();
+
+            if (progress != null)
+                await _youtube.Videos.Streams.DownloadAsync(
+                    audioStream, tempPath, new Progress<double>(p => progress.Report(p)), ct);
+            else
+                await _youtube.Videos.Streams.DownloadAsync(audioStream, tempPath, null, ct);
+
+            try { File.Move(tempPath, targetPath, overwrite: false); }
+            catch (IOException) { try { File.Delete(tempPath); } catch { } }
+
+            return targetPath;
+        }
+        catch
+        {
+            try { if (File.Exists(tempPath)) File.Delete(tempPath); } catch { }
+            throw;
+        }
+    }
+
+    public static void ClearAll()
+    {
+        try
+        {
+            if (!Directory.Exists(PreviewFolder)) return;
+            foreach (var file in Directory.GetFiles(PreviewFolder, "*"))
+                try { File.Delete(file); } catch { }
+        }
+        catch { }
+    }
+}

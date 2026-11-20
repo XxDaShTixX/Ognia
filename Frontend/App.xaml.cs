@@ -1,4 +1,5 @@
 ﻿using Ognia.Frontend.Helpers;
+using Ognia.Frontend.Local;
 using Ognia.Frontend.Services;
 using System.Windows;
 
@@ -36,6 +37,8 @@ public partial class App : Application
     {
         if (AppSettings.Instance.Update.AutoUpdateEnabled)
             UpdateService.Instance.ApplyOnExit();
+
+        PreviewDownloader.ClearAll();
 
         base.OnExit(e);
     }

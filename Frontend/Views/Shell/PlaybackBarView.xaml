@@ -22,7 +22,7 @@
             <Border.Clip>
                 <RectangleGeometry RadiusX="6" RadiusY="6" Rect="0,0,100,100"/>
             </Border.Clip>
-            <Image Source="{Binding PlaybackViewModel.CurrentTrack.ThumbnailPath, Converter={StaticResource StringToImageSource}}"
+            <Image Source="{Binding PlaybackViewModel.NowPlayingThumbnail, Converter={StaticResource StringToImageSource}}"
                    Stretch="UniformToFill"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"/>

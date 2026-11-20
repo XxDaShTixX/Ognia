@@ -62,7 +62,19 @@ public sealed class TrackDetailsViewModel : ViewModelBase
 
     public string TrackName => SelectedTrack?.Name ?? string.Empty;
     public string? TrackThumbnailPath => SelectedTrack?.ThumbnailPath;
+
     public TimeSpan? TrackDuration => SelectedTrack?.Duration;
+    public string TrackDurationLabel
+    {
+        get
+        {
+            var d = TrackDuration ?? TimeSpan.Zero;
+            return d.TotalHours >= 1
+                ? $"{(int)d.TotalHours}:{d.Minutes:00}:{d.Seconds:00}"
+                : d.ToString(@"mm\:ss");
+        }
+    }
+
     public string? TrackSourceUrl => SelectedTrack?.SourceUrl;
 
     public bool IsRenameOpen
@@ -105,6 +117,7 @@ public sealed class TrackDetailsViewModel : ViewModelBase
         OnPropertyChanged(nameof(TrackName));
         OnPropertyChanged(nameof(TrackThumbnailPath));
         OnPropertyChanged(nameof(TrackDuration));
+        OnPropertyChanged(nameof(TrackDurationLabel));
         OnPropertyChanged(nameof(TrackSourceUrl));
         System.Windows.Input.CommandManager.InvalidateRequerySuggested();
     }

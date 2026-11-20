@@ -129,6 +129,7 @@
 
     <Style x:Key="PrimaryTextBlock" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{DynamicResource LightTextColor}"/>
+        <Setter Property="FontSize" Value="12"/>
         <Setter Property="Margin" Value="0"/>
     </Style>
 
@@ -144,11 +145,6 @@
         <Setter Property="FontSize" Value="15"/>
         <Setter Property="Margin" Value="10"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{DynamicResource LightTextColor}"/>
-    </Style>
-
-    <Style x:Key="BodyText" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="14"/>
         <Setter Property="Foreground" Value="{DynamicResource LightTextColor}"/>
     </Style>
 
