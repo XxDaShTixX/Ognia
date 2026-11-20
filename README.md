@@ -1,10 +1,10 @@
 # 🔥 Ognia
 
 <p align="center">
-  <img src="Frontend/Assets/Brand/Icon/Ognia.png" alt="Ognia logo" width="200"/>
+  <img src="Wpf/Assets/Brand/Icon/Ognia.png" alt="Ognia logo" width="200"/>
 </p>
 
-A Windows music player that turns YouTube links into a local, offline-capable library. Personal learning project — ASP.NET Core backend for accounts and metadata, WPF client that downloads and plays audio.
+A Windows music player that turns YouTube links into a local, offline-capable library. Personal learning project — ASP.NET Core server for accounts and metadata, WPF client that downloads and plays audio.
 
 ## Screenshots
 
@@ -26,7 +26,7 @@ A Windows music player that turns YouTube links into a local, offline-capable li
 
 ### 🖥️ Windows Presentation Foundation (WPF) client
 
-- Guest mode: use the app with no backend, stored locally
+- Guest mode: use the app with no server, stored locally
 - Guest-to-account upgrade (uploads the local library on first login)
 - Export / import the guest library as JSON
 - Playlists: create, rename, delete, reorder
@@ -55,7 +55,7 @@ A Windows music player that turns YouTube links into a local, offline-capable li
 ```
 +----------------+   HTTPS/JSON   +------------------+
 |  WPF (client)  | <------------> |  ASP.NET Core    |
-|                |  JWT bearer    |  (backend)       |
+|                |  JWT bearer    |  (Server)       |
 +----------------+                +------------------+
        |                                    |
        v                                    v
@@ -64,12 +64,12 @@ A Windows music player that turns YouTube links into a local, offline-capable li
   + themes + cache                    tracks, tokens)
 ```
 
-The backend owns users, playlists, and track metadata. The client owns local audio files, settings, themes, and (in guest mode) a local library. The backend never handles audio bytes — the client downloads directly from YouTube via `YoutubeExplode`. Metadata lookups (title, duration, thumbnail) also go through `YoutubeExplode`: the backend does them on behalf of logged-in users, and the client does them locally in guest mode.
+The server owns users, playlists, and track metadata. The client owns local audio files, settings, themes, and (in guest mode) a local library. The server never handles audio bytes — the client downloads directly from YouTube via `YoutubeExplode`. Metadata lookups (title, duration, thumbnail) also go through `YoutubeExplode`: the server does them on behalf of logged-in users, and the client does them locally in guest mode.
 
 ## 🧰 Tech stack
 
-- **Backend:** .NET 10, ASP.NET Core Web API, EF Core + SQLite, ASP.NET Core Identity, JWT bearer, Swashbuckle
-- **Frontend:** .NET 10, WPF, plain MVVM (`INotifyPropertyChanged`, `ICommand`), NAudio, `YoutubeExplode`, Velopack
+- **Server:** .NET 10, ASP.NET Core Web API, EF Core + SQLite, ASP.NET Core Identity, JWT bearer, Swashbuckle
+- **WPF:** .NET 10, WPF, plain MVVM (`INotifyPropertyChanged`, `ICommand`), NAudio, `YoutubeExplode`, Velopack
 
 ## 🚀 Getting started
 
@@ -80,10 +80,10 @@ The backend owns users, playlists, and track metadata. The client owns local aud
 - Optional: `dotnet tool install --global dotnet-ef`
 - Optional: `dotnet tool install --global vpk` (only needed to build installers)
 
-### Backend
+### Server
 
 ```bash
-cd Backend
+cd Server
 dotnet user-secrets set "Jwt:Key" "<64-char-random-hex>"
 dotnet ef database update
 dotnet run
@@ -95,21 +95,21 @@ Generate a key with:
 [Convert]::ToHexString((1..32 | ForEach-Object { Get-Random -Max 256 })).ToLower()
 ```
 
-Backend runs at `https://localhost:7235`. Swagger at `/swagger`.
+Server runs at `https://localhost:7235`. Swagger at `/swagger`.
 
-### Frontend
+### WPF
 
 ```bash
 dotnet dev-certs https --trust     # one-time
-cd Frontend
+cd Wpf
 dotnet run
 ```
 
-The client connects to `https://localhost:7235` by default. To change it, set `api.baseUrl` in `%APPDATA%\Ognia\settings.json` after first launch (or edit `ApiSettings.BaseUrl` in `Frontend/Helpers/AppSettings.cs` before building).
+The client connects to `https://localhost:7235` by default. To change it, set `api.baseUrl` in `%APPDATA%\Ognia\settings.json` after first launch (or edit `ApiSettings.BaseUrl` in `Wpf/Helpers/AppSettings.cs` before building).
 
 ### 🎧 First use
 
-1. **Continue as Guest** to try without a backend account, or register.
+1. **Continue as Guest** to try without a server account, or register.
 2. Create a playlist.
 3. Use **Search** to find a YouTube video, or **Add track** to paste a URL directly.
 4. Click **Download** to fetch audio locally.
@@ -119,7 +119,7 @@ The client connects to `https://localhost:7235` by default. To change it, set `a
 
 Builds are packaged with [Velopack](https://velopack.io/). The `Ognia/Velopack/` folder holds the tooling:
 
-- `Run.bat` prompts for a version, publishes `Frontend`, and packs the release into `Ognia/Velopack/Releases/`.
+- `Run.bat` prompts for a version, publishes `Wpf`, and packs the release into `Ognia/Velopack/Releases/`.
 - `Build.ps1` is the script `Run.bat` invokes — clean publish, `vpk pack`.
 
 To cut a release:
@@ -147,7 +147,7 @@ Installed apps check GitHub on startup, download any newer release in the backgr
 
 **Install** — `%LOCALAPPDATA%\Ognia\` (Velopack's install directory; separate from app data to avoid collisions on update).
 
-**Database** — `Backend/database.db` (SQLite, created by `dotnet ef database update`).
+**Database** — `Server/database.db` (SQLite, created by `dotnet ef database update`).
 
 ## 🎵 Track sources
 
@@ -159,9 +159,9 @@ Each track has a `(SourceName, SourceId)` pair — e.g. `("youtube", "dQw4w9WgXc
 
 ### ➕ Adding a new source
 
-Implement `ITrackSourceService` in the backend (see `Backend/Services/TrackSourceService/`), add a `TrackSource` enum member, add its wire name to `TrackSourceExtensions`, and register it in `Program.cs`.
+Implement `ITrackSourceService` in the server (see `Server/Services/TrackSourceService/`), add a `TrackSource` enum member, add its wire name to `TrackSourceExtensions`, and register it in `Program.cs`.
 
-Note: the backend currently registers a single `ITrackSourceService` (`YouTubeTrackSourceService`) and the add-track endpoint uses that one instance directly. To support multiple sources, change the registration to a collection (`IEnumerable<ITrackSourceService>`) and update the endpoint to dispatch by `CanHandle(url)` — the interface is already designed for this.
+Note: the server currently registers a single `ITrackSourceService` (`YouTubeTrackSourceService`) and the add-track endpoint uses that one instance directly. To support multiple sources, change the registration to a collection (`IEnumerable<ITrackSourceService>`) and update the endpoint to dispatch by `CanHandle(url)` — the interface is already designed for this.
 
 ## 🤝 Contributing
 
@@ -183,7 +183,7 @@ Open an [issue](https://github.com/XxDaShTixX/Ognia/issues). Both are equally we
    # e.g. Dash-FixPlaylistRename, Dash-AddKeyboardShortcuts
    ```
 3. **Make your change.** Keep commits focused; a single feature or fix per branch is ideal. The smaller the change, the better.
-4. **Test it.** `dotnet build` must pass. If you touched the backend, run it and click through the flow. If you touched the client, run it with both guest mode and an account.
+4. **Test it.** `dotnet build` must pass. If you touched the server, run it and click through the flow. If you touched the client, run it with both guest mode and an account.
 5. **Open a pull request** against `main`. Describe what changed and why. Reference the issue number if there is one (`Closes #12`).
 
 ### 🤖 AI-assisted contributions
@@ -193,8 +193,8 @@ Using AI tools (Copilot, Claude, ChatGPT, Cursor, etc.) is fine. You don't need 
 ### 🔍 What I'll look at in a PR
 
 - Does it work? Build clean, no errors or warning, no obvious regressions.
-- Does it fit the existing structure? MVVM in the client, DTOs in the backend, `ITrackSourceService` for new sources.
-- Does it work in guest mode too? Anything user-facing should either function with `LocalMusicRepo` or be explicitly hidden when no backend is configured.
+- Does it fit the existing structure? MVVM in the client, DTOs in the server, `ITrackSourceService` for new sources.
+- Does it work in guest mode too? Anything user-facing should either function with `LocalMusicRepo` or be explicitly hidden when no server is configured.
 - Is the diff small? Large sweeping refactors are harder to review than focused changes.
 
 ### 🚫 What I won't merge
