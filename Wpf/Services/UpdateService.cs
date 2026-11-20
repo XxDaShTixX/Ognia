@@ -11,6 +11,7 @@ public sealed class UpdateService
 
     private UpdateManager _manager;
     private UpdateInfo? _pendingUpdate;
+    private bool _pendingDownloaded;
 
     private UpdateService()
     {
@@ -61,6 +62,7 @@ public sealed class UpdateService
     public string DisplayVersion => $"Ognia v{CurrentVersion}";
 
     public string? PendingVersion => _pendingUpdate?.TargetFullRelease.Version.ToString();
+    public bool PendingIsDownloaded => _pendingDownloaded;
 
     public event Action? StateChanged;
 
@@ -74,7 +76,14 @@ public sealed class UpdateService
             if (info == null) return null;
 
             if (downloadIfFound)
+            {
                 await _manager.DownloadUpdatesAsync(info);
+                _pendingDownloaded = true;
+            }
+            else
+            {
+                _pendingDownloaded = false;
+            }
 
             _pendingUpdate = info;
             StateChanged?.Invoke();
@@ -88,14 +97,14 @@ public sealed class UpdateService
 
     public void ApplyAndRestart()
     {
-        if (_pendingUpdate == null) return;
+        if (_pendingUpdate == null || !_pendingDownloaded) return;
         try { _manager.ApplyUpdatesAndRestart(_pendingUpdate); }
         catch { }
     }
 
     public void ApplyOnExit()
     {
-        if (_pendingUpdate == null) return;
+        if (_pendingUpdate == null || !_pendingDownloaded) return;
         try { _manager.WaitExitThenApplyUpdates(_pendingUpdate, silent: true, restart: false); }
         catch { }
     }

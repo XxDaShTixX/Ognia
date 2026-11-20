@@ -302,8 +302,9 @@ public sealed class SettingsViewModel : ViewModelBase
 
     private async Task ApplyUpdateAsync()
     {
-        if (_updates.PendingVersion == null)
+        if (!_updates.PendingIsDownloaded)
         {
+            UpdateStatus = "Downloading update…";
             var version = await _updates.CheckAsync(downloadIfFound: true);
             if (version == null)
             {
@@ -312,6 +313,7 @@ public sealed class SettingsViewModel : ViewModelBase
             }
         }
 
+        UpdateStatus = "Applying update…";
         _updates.ApplyAndRestart();
     }
 
