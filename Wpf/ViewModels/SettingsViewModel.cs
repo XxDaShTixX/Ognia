@@ -197,8 +197,7 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public bool HasUpdate => _availableVersion != null && _updates.PendingIsDownloaded;
 
-    public string AvailableVersionText =>
-        _availableVersion == null ? string.Empty : $"Update v{_availableVersion} available!";
+    public string AvailableVersionText => _availableVersion == null ? string.Empty : $"Update v{_availableVersion} available!";
 
     public string? UpdateStatus
     {
