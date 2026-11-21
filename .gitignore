@@ -7,11 +7,6 @@
 Ognia/Velopack/publish/
 Ognia/Velopack/Releases/
 
-# SQLite database files
-*.db
-*.db-shm
-*.db-wal
-
 # User-specific files
 *.rsuser
 *.suo
