@@ -1,4 +1,3 @@
 <Solution>
-  <Project Path="Server/Server.csproj" />
   <Project Path="Wpf/Wpf.csproj" />
 </Solution>
