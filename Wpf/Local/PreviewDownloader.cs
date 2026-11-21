@@ -14,9 +14,9 @@ public class PreviewDownloader
         Path.Combine(AppPaths.AppDataFolder, "previews");
 
     public async Task<string> DownloadAsync(
-        TrackResponse track,
-        IProgress<double>? progress = null,
-        CancellationToken ct = default)
+    TrackResponse track,
+    IProgress<double>? progress = null,
+    CancellationToken ct = default)
     {
         Directory.CreateDirectory(PreviewFolder);
 
@@ -28,13 +28,24 @@ public class PreviewDownloader
         try
         {
             var manifest = await _youtube.Videos.Streams.GetManifestAsync(track.SourceId, ct);
-            var audioStream = manifest.GetAudioOnlyStreams().GetWithHighestBitrate();
+
+            IStreamInfo? streamInfo = manifest.GetAudioOnlyStreams().TryGetWithHighestBitrate();
+
+            streamInfo ??= manifest.GetMuxedStreams().TryGetWithHighestBitrate();
+
+            streamInfo ??= manifest.Streams
+                .OfType<IAudioStreamInfo>()
+                .OrderByDescending(s => s.Bitrate)
+                .FirstOrDefault();
+
+            if (streamInfo is null)
+                throw new InvalidOperationException($"No audio stream available for '{track.SourceId}'.");
 
             if (progress != null)
                 await _youtube.Videos.Streams.DownloadAsync(
-                    audioStream, tempPath, new Progress<double>(p => progress.Report(p)), ct);
+                    streamInfo, tempPath, progress, ct);
             else
-                await _youtube.Videos.Streams.DownloadAsync(audioStream, tempPath, null, ct);
+                await _youtube.Videos.Streams.DownloadAsync(streamInfo, tempPath, null, ct);
 
             try { File.Move(tempPath, targetPath, overwrite: false); }
             catch (IOException) { try { File.Delete(tempPath); } catch { } }

@@ -5,6 +5,8 @@ namespace Ognia.Wpf.Helpers;
 
 public static class AppInfo
 {
+    public const string GitHubRepositoryUrl = "https://github.com/XxDaShTixX/Ognia-WPF";
+
     /// <summary>
     /// The installed Velopack version, or the assembly version when running
     /// outside an install (e.g. from bin/ during development).
@@ -17,7 +19,7 @@ public static class AppInfo
             {
                 var mgr = new UpdateManager(
                     new Velopack.Sources.GithubSource(
-                        "https://github.com/XxDaShTixX/Ognia", accessToken: null, prerelease: false));
+                        GitHubRepositoryUrl, accessToken: null, prerelease: false));
 
                 if (mgr.IsInstalled && mgr.CurrentVersion != null)
                     return mgr.CurrentVersion.ToString();

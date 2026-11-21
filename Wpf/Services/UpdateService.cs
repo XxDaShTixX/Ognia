@@ -23,7 +23,7 @@ public sealed class UpdateService
 
     private static UpdateManager CreateManager()
         => new(new GithubSource(
-            "https://github.com/XxDaShTixX/Ognia",
+            AppInfo.GitHubRepositoryUrl,
             accessToken: null,
             prerelease: UsesPrereleases));
 
