@@ -26,17 +26,11 @@ public class AppSettings
     /// </summary>
     public string ActiveTheme { get; set; } = "Default.json";
 
-    /// <summary>
-    /// The current version of the application
-    /// </summary>
-    public string Version { get; set; } = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty;
-
     #region Settings File Structure
     public UpdateSettings Update { get; set; } = new();
     public ApiSettings Api { get; set; } = new();
     public PlaybackSettings Playback { get; set; } = new();
     public WindowSettings Window { get; set; } = new();
-    public UxSettings Ux { get; set; } = new();
     #endregion
 
     /// <summary>
@@ -116,16 +110,6 @@ public class PlaybackSettings
     /// Currnet shuffle toggle.
     /// </summary>
     public bool Shuffle { get; set; } = false;
-
-    /// <summary>
-    /// Last track played.
-    /// </summary>
-    public int? LastTrackId { get; set; }
-
-    /// <summary>
-    /// Seconds into the last track when it was paused/closed.
-    /// </summary>
-    public double LastTrackPosition { get; set; } = 0;
 }
 
 public class WindowSettings
@@ -141,9 +125,4 @@ public class WindowSettings
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public WindowState State { get; set; } = WindowState.Normal;
-}
-
-public class UxSettings
-{
-    public int? LastOpenedPlaylistId { get; set; }
 }

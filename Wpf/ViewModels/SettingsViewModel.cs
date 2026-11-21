@@ -225,26 +225,41 @@ public sealed class SettingsViewModel : ViewModelBase
         set
         {
             var channel = value ? "prerelease" : "stable";
-            if (string.Equals(AppSettings.Instance.Update.Channel, channel, StringComparison.OrdinalIgnoreCase))
-                return;
+            var changed = !string.Equals(
+                AppSettings.Instance.Update.Channel,
+                channel,
+                StringComparison.OrdinalIgnoreCase);
 
-            AppSettings.Instance.Update.Channel = channel;
-            AppSettings.Instance.Save();
+            if (changed)
+            {
+                AppSettings.Instance.Update.Channel = channel;
+                AppSettings.Instance.Save();
+                _updates.ReloadChannel();
+                AvailableVersion = null;
+            }
+
             OnPropertyChanged();
             OnPropertyChanged(nameof(UseStableChannel));
 
-            _updates.ReloadChannel();
-            AvailableVersion = null;
-            UpdateStatus = value
-                ? "Switched to pre-release channel. Check for updates."
-                : "Switched to stable channel. Check for updates.";
+            if (changed)
+            {
+                UpdateStatus = value
+                    ? "Switched to pre-release channel. Check for updates."
+                    : "Switched to stable channel. Check for updates.";
+            }
         }
     }
 
     public bool UseStableChannel
     {
         get => !UsePrereleaseChannel;
-        set { if (value) UsePrereleaseChannel = false; }
+        set
+        {
+            if (value)
+                UsePrereleaseChannel = false;
+            else
+                OnPropertyChanged();
+        }
     }
 
     public bool CanCheckForUpdates => IsUpdateInstalled && !IsChecking;

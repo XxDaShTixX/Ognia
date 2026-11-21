@@ -52,7 +52,7 @@ public sealed class AppNavigator : IAppNavigator
     {
         _session!.SelectedPlaylist = playlist;
 
-        AppSettings.Instance.Ux.LastOpenedPlaylistId = playlist.Id;
+        PlaybackSessionState.Instance.LastOpenedPlaylistId = playlist.Id;
         AppSettings.Instance.Save();
 
         MainContentChanged?.Invoke(new PlaylistView

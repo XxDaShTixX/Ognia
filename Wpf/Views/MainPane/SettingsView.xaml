@@ -236,6 +236,7 @@
                                 Margin="0,4,0,0"
                                 Visibility="{Binding IsUpdateInstalled, Converter={StaticResource BoolToVisibility}}">
                         
+                        <!-- Auto Update Checkbox -->
                         <CheckBox Content="Automatically update on close"
                                   IsChecked="{Binding AutoUpdateEnabled, Mode=TwoWay}"
                                   Foreground="{DynamicResource LightTextColor}"
@@ -243,6 +244,7 @@
                                   Margin="0,4,0,8"
                                   ToolTip="When enabled, the app checks for updates on startup, downloads them in the background, and installs them silently when you close the app. The new version runs next launch."/>
 
+                        <!-- Update Channels -->
                         <StackPanel Orientation="Horizontal"
                                     HorizontalAlignment="Center"
                                     Margin="0,0,0,8">
@@ -251,16 +253,17 @@
                                          Margin="0,0,16,0"
                                          VerticalAlignment="Center"
                                          Foreground="{DynamicResource LightTextColor}"
-                                         IsChecked="{Binding UseStableChannel, Mode=TwoWay}"
+                                         IsChecked="{Binding UseStableChannel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          ToolTip="Updates include only stable releases."/>
                             <RadioButton Content="Pre-release Channel"
                                          GroupName="UpdateChannel"
                                          VerticalAlignment="Center"
                                          Foreground="{DynamicResource LightTextColor}"
-                                         IsChecked="{Binding UsePrereleaseChannel, Mode=TwoWay}"
+                                         IsChecked="{Binding UsePrereleaseChannel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          ToolTip="Updates include pre-release builds."/>
                         </StackPanel>
-                        
+
+                        <!-- Check for Updates Button -->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <Button Content="Check for updates"
                                     Command="{Binding CheckForUpdatesCommand}"/>
@@ -291,6 +294,7 @@
                                    Foreground="{DynamicResource DisabledTextColor}"/>
                     </StackPanel>
 
+                    <!-- Update Unavailable in Dev -->
                     <TextBlock Text="Updates are unavailable in development builds."
                                HorizontalAlignment="Center"
                                Margin="0,4,0,0"
@@ -307,6 +311,7 @@
                         </TextBlock.Style>
                     </TextBlock>
 
+                    <!-- App Version -->
                     <TextBlock Text="{Binding AppVersion}"
                                HorizontalAlignment="Center"
                                Margin="0,8,0,12"

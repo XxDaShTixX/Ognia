@@ -31,7 +31,7 @@
                     Height="50"
                     Background="{DynamicResource BackgroundColor}"
                     WindowChrome.IsHitTestVisibleInChrome="False">
-                <TextBlock Text="Ognia"
+                <TextBlock Text="{Binding DisplayTitle}"
                            VerticalAlignment="Center"
                            Margin="12,0,0,0"
                            FontSize="12"

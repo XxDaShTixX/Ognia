@@ -14,6 +14,8 @@ public partial class App : Application
             base.OnStartup(e);
 
             AppPaths.Initialize();
+            AppSettings.Instance.Save();
+
             ThemeService.Initialize();
 
             System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level =

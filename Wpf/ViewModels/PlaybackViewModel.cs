@@ -71,9 +71,9 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
             _currentTrack = value;
             if (_currentTrack != null) _currentTrack.IsPlaying = true;
 
-            AppSettings.Instance.Playback.LastTrackId = value?.Id;
+            PlaybackSessionState.Instance.LastTrackId = value?.Id;
             if (_pendingRestorePosition == TimeSpan.Zero)
-                AppSettings.Instance.Playback.LastTrackPosition = 0;
+                PlaybackSessionState.Instance.LastTrackPosition = 0;
             AppSettings.Instance.Save();
 
             OnPropertyChanged(nameof(CurrentTrack));
@@ -560,7 +560,7 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
     public void RestoreTrack(TrackRowViewModel track)
     {
         _pendingRestorePosition = TimeSpan.FromSeconds(
-            Math.Max(0, AppSettings.Instance.Playback.LastTrackPosition));
+            Math.Max(0, PlaybackSessionState.Instance.LastTrackPosition));
 
         CurrentTrack = track;
 
@@ -654,7 +654,7 @@ public class PlaybackViewModel : ViewModelBase, IDisposable
     {
         if (_currentTrack == null) return;
 
-        AppSettings.Instance.Playback.LastTrackPosition = CurrentPosition.TotalSeconds;
+        PlaybackSessionState.Instance.LastTrackPosition = CurrentPosition.TotalSeconds;
         AppSettings.Instance.Save();
     }
 

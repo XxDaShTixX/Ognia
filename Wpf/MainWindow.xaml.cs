@@ -18,21 +18,43 @@ public partial class MainWindow : Window
     public ApiClientService Api { get; }
     public IAppNavigator Navigator { get; }
 
-    public string AppNameVersion = $"Ognia v{AppSettings.Instance.Version}";
+    public static readonly DependencyProperty DisplayTitleProperty =
+        DependencyProperty.Register(
+            nameof(DisplayTitle),
+            typeof(string),
+            typeof(MainWindow),
+            new PropertyMetadata(string.Empty));
+
+    public string DisplayTitle
+    {
+        get => (string)GetValue(DisplayTitleProperty);
+        private set => SetValue(DisplayTitleProperty, value);
+    }
 
     public MainWindow()
     {
         InitializeComponent();
+        DataContext = this;
         Current = this;
+
+        DisplayTitle = AppInfo.DisplayVersion;
+        Loaded += (_, _) => RefreshDisplayTitle();
+        UpdateService.Instance.StateChanged += OnUpdateStateChanged;
 
         Api = new ApiClientService(AppSettings.Instance.Api.BaseUrl);
         Navigator = new AppNavigator(Api, view => MainContent.Content = view);
 
         Api.Unauthorized += OnUnauthorized;
+        UpdateService.Instance.StateChanged += OnUpdateStateChanged;
 
         _ = InitializeAuthAsync();
-
     }
+
+    private void RefreshDisplayTitle()
+    => DisplayTitle = AppInfo.DisplayVersion;
+
+    private void OnUpdateStateChanged()
+        => Dispatcher.Invoke(RefreshDisplayTitle);
 
     /// <summary>
     /// Window round edges
@@ -83,6 +105,10 @@ public partial class MainWindow : Window
         PersistPlaybackPosition();
 
         AppSettings.Instance.Save();
+        PlaybackSessionState.Instance.Save();
+
+        UpdateService.Instance.StateChanged -= OnUpdateStateChanged;
+        Api.Unauthorized -= OnUnauthorized;
 
         base.OnClosing(e);
     }
@@ -152,9 +178,8 @@ public partial class MainWindow : Window
         var playback = Navigator.Playback;
         if (playback?.CurrentTrack == null) return;
 
-        AppSettings.Instance.Playback.LastTrackPosition =
+        PlaybackSessionState.Instance.LastTrackPosition =
             playback.CurrentPosition.TotalSeconds;
-        AppSettings.Instance.Save();
     }
     #endregion
 
