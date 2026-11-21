@@ -1,7 +1,7 @@
 # 🔥 Ognia (WPF Client)
 
 <p align="center">
-  <img src="/Assets/Brand/Logo/Ognia.png" alt="Ognia logo" width="200"/>
+  <img src="/Wpf/Assets/Brand/Logo/Ognia.png" alt="Ognia logo" width="200"/>
 </p>
 
 A Windows music player that turns YouTube links into a local, offline-capable library. Built in WPF with .NET 10, NAudio, and `YoutubeExplode`. Works completely standalone in guest mode, or syncs playlists and metadata with [Ognia-Server](https://github.com/XxDaShTixX/Ognia-Server).
