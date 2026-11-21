@@ -1,0 +1,111 @@
+﻿<UserControl x:Class="Ognia.Wpf.Views.Shell.PlaybackBarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid Height="100">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left: thumbnail spanning full height -->
+        <Border Grid.Column="0" Width="100"
+                Style="{StaticResource HoverTile}"
+                Background="{DynamicResource TextboxBackgroundColor}"
+                CornerRadius="6" Margin="0,0,10,0"
+                VerticalAlignment="Stretch"
+                Cursor="Hand"
+                MouseLeftButtonUp="Thumbnail_Click">
+            <Border.Clip>
+                <RectangleGeometry RadiusX="6" RadiusY="6" Rect="0,0,100,100"/>
+            </Border.Clip>
+            <Image Source="{Binding PlaybackViewModel.NowPlayingThumbnail, Converter={StaticResource StringToImageSource}}"
+                   Stretch="UniformToFill"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Right: everything else, stacked vertically -->
+        <DockPanel Grid.Column="1">
+            <!-- Playback Controls -->
+            <Grid DockPanel.Dock="Bottom">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Playback buttons (center) -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Button Content="⏮" Command="{Binding PlaybackViewModel.PreviousCommand}"
+                        Style="{StaticResource IconButton}" ToolTip="Play previous track."/>
+                    <Button Content="{Binding PlaybackViewModel.PlayPauseLabel}"
+                        Command="{Binding PlaybackViewModel.PlayPauseCommand}"
+                        Style="{StaticResource IconButton}" Height="50" Width="50"
+                        ToolTip="Play/Pause"/>
+                    <Button Content="⏹" Command="{Binding PlaybackViewModel.StopCommand}"
+                        Style="{StaticResource IconButton}" Height="50" Width="50"
+                        ToolTip="Stop track."/>
+                    <Button Content="⏭" Command="{Binding PlaybackViewModel.NextCommand}"
+                        Style="{StaticResource IconButton}" ToolTip="Play next track."/>
+                    <Button Content="{Binding PlaybackViewModel.RepeatLabel}"
+                        Command="{Binding PlaybackViewModel.CycleRepeatCommand}"
+                        Style="{StaticResource IconButton}" ToolTip="Repeat All/Once/Off."/>
+                    <Button Content="{Binding PlaybackViewModel.ShuffleLabel}"
+                        Command="{Binding PlaybackViewModel.ToggleShuffleCommand}"
+                        Style="{StaticResource IconButton}" ToolTip="Shuffle on/off."/>
+                </StackPanel>
+
+                <!-- Volume (right) -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal"
+                        HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="{Binding PlaybackViewModel.VolumeIcon}"
+                        Command="{Binding PlaybackViewModel.ToggleMuteCommand}"
+                        Style="{StaticResource IconButton}" ToolTip="Mute/Unmute volume."/>
+                    <Slider Width="150" Minimum="0" Maximum="1"
+                        Value="{Binding PlaybackViewModel.Volume, Mode=TwoWay}"
+                        VerticalAlignment="Center"
+                        IsMoveToPointEnabled="True"
+                        ToolTip="Adjust volume."/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Now Playing -->
+            <TextBlock DockPanel.Dock="Bottom"
+                   Text="{Binding PlaybackViewModel.NowPlaying, StringFormat='Now playing: {0}'}"
+                   FontWeight="SemiBold"
+                   TextTrimming="CharacterEllipsis"
+                   Style="{StaticResource PrimaryTextBlock}"/>
+
+            <!-- Seek slider -->
+            <Grid DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="{Binding PlaybackViewModel.PositionLabel}"
+                       VerticalAlignment="Center" Width="50"
+                       Style="{StaticResource PrimaryTextBlock}"/>
+
+                <Slider Grid.Column="1"
+                    Minimum="0"
+                    Maximum="{Binding PlaybackViewModel.TotalDuration, Converter={StaticResource TimeSpanToSecondsConverter}}"
+                    Value="{Binding PlaybackViewModel.CurrentPosition, Mode=TwoWay, Converter={StaticResource TimeSpanToSecondsConverter}}"
+                    VerticalAlignment="Center"
+                    IsMoveToPointEnabled="True"
+                    Thumb.DragStarted="Slider_DragStarted"
+                    Thumb.DragCompleted="Slider_DragCompleted"/>
+
+                <TextBlock Grid.Column="2" Text="{Binding PlaybackViewModel.DurationLabel}"
+                       VerticalAlignment="Center" Margin="10,0,0,0"
+                       Style="{StaticResource PrimaryTextBlock}"/>
+            </Grid>
+        </DockPanel>
+    </Grid>
+</UserControl>

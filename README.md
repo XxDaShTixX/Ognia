@@ -1,10 +1,10 @@
-# 🔥 Ognia
+# 🔥 Ognia (WPF Client)
 
 <p align="center">
-  <img src="/Frontend/Assets/Brand/Logo/Ognia.png" alt="Ognia logo" width="200"/>
+  <img src="/Assets/Brand/Logo/Ognia.png" alt="Ognia logo" width="200"/>
 </p>
 
-A Windows music player that turns YouTube links into a local, offline-capable library. Personal learning project — ASP.NET Core backend for accounts and metadata, WPF client that downloads and plays audio.
+A Windows music player that turns YouTube links into a local, offline-capable library. Built in WPF with .NET 10, NAudio, and `YoutubeExplode`. Works completely standalone in guest mode, or syncs playlists and metadata with [Ognia-Server](https://github.com/XxDaShTixX/Ognia-Server).
 
 ## Screenshots
 
@@ -24,100 +24,99 @@ A Windows music player that turns YouTube links into a local, offline-capable li
 
 ## ✨ Features
 
-- Email/password accounts with JWT + refresh tokens
-- Forgot password / reset password / change password
-- Guest mode: use the app with no backend, stored locally
-- Guest-to-account upgrade (uploads the local library on first login)
-- Export / import the guest library as JSON
-- Playlists: create, rename, delete, reorder
-- Tracks: add by URL, rename, remove
-- Download audio to a local folder, play offline
-- Play/pause, stop, next/previous, seek, volume, mute
-- Repeat (off/all/one) and shuffle
-- Download all tracks in a playlist, with status bar progress
-- Auto-generated 2×2 playlist covers from track thumbnails
-- Mini player: compact, always-on-top window with hover-to-reveal fade
-- Themes: Default, Dark, Light (JSON-based, user-editable)
+- **Offline-first playback:** Download audio locally and play offline
+- **Guest mode:** Use the app with no backend required, stored locally
+- **Account sync:** Email/password login with JWT + refresh tokens, password reset/change, and one-click guest-to-account library upload (requires [Ognia-Server](https://github.com/XxDaShTixX/Ognia-Server))
+- **Library portability:** Export and import the guest library as JSON
+- **Playlists:** Create, rename, delete, reorder, and batch-download all tracks with status bar progress
+- **Tracks:** Add by YouTube URL, rename, remove
+- **Playback controls:** Play/pause, stop, next/previous, seek, volume, mute, repeat (off/all/one), and shuffle
+- **Auto-generated covers:** 2×2 playlist covers stitched from track thumbnails
+- **Mini player:** Compact, always-on-top window with hover-to-reveal fade
+- **Custom themes:** Default, Dark, and Light themes (JSON-based and user-editable)
 
 ## 🏗️ Architecture
 
 ```
 +----------------+   HTTPS/JSON   +------------------+
-|  WPF (client)  | <------------> |  ASP.NET Core    |
-|                |  JWT bearer    |  (backend)       |
+|  Ognia-WPF     | <------------> |  Ognia-Server    |
+|                |  JWT bearer    |  (Optional)      |
 +----------------+                +------------------+
-       |                                    |
-       v                                    v
-  Local audio +                       SQLite database
-  settings + library                  (users, playlists,
-  + themes + cache                    tracks, tokens)
+       |
+       v 
+  Local audio +
+  settings + library
+  + themes + cache
 ```
+The client owns all local audio files, playback, settings, themes, and (in guest mode) the local library. Audio bytes never pass through a server — `Ognia-WPF` downloads directly from YouTube via `YoutubeExplode`. In guest mode, track metadata lookups (title, duration, thumbnail) also run locally via `YoutubeExplode`.
 
-The backend owns users, playlists, and track metadata. The client owns local audio files, settings, themes, and (in guest mode) a local library. The backend never handles audio bytes — the client downloads directly from YouTube via `YoutubeExplode`. Metadata lookups (title, duration, thumbnail) also go through `YoutubeExplode`: the backend does them on behalf of logged-in users, and the client does them locally in guest mode.
+## 🧰 Tech Stack
 
-## 🧰 Tech stack
+- **.NET 10** & **WPF**
+- **Architecture:** Plain MVVM (`INotifyPropertyChanged`, `ICommand`)
+- **Audio & Media:** `NAudio`, `YoutubeExplode`
 
-- **Backend:** .NET 10, ASP.NET Core Web API, EF Core + SQLite, ASP.NET Core Identity, JWT bearer, Swashbuckle
-- **Frontend:** .NET 10, WPF, plain MVVM (`INotifyPropertyChanged`, `ICommand`), NAudio, `YoutubeExplode`
-
-## 🚀 Getting started
+## 🚀 Getting Started
 
 ### Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- Windows (WPF client is Windows-only)
-- Optional: `dotnet tool install --global dotnet-ef`
+- Windows (WPF is Windows-only)
 
-### Backend
+### Run the Client
 
 ```bash
-cd Backend
-dotnet user-secrets set "Jwt:Key" "<64-char-random-hex>"
-dotnet ef database update
+dotnet dev-certs https --trust     # one-time (needed if connecting to a local HTTPS server)
 dotnet run
 ```
 
-Generate a key with:
+By default, the client looks for the backend at `https://localhost:7235`. You don't need the server running to use **Guest Mode**.
 
-```powershell
-[Convert]::ToHexString((1..32 | ForEach-Object { Get-Random -Max 256 })).ToLower()
-```
+To point the client to a different backend URL:
+- Edit `api.baseUrl` in `%LOCALAPPDATA%\Ognia\settings.json` after first launch, **or**
+- Update `ApiSettings.BaseUrl` in `Helpers/AppSettings.cs` before building.
 
-Backend runs at `https://localhost:7235`. Swagger at `/swagger`.
+### 🎧 First Use
 
-### Frontend
-
-```bash
-dotnet dev-certs https --trust     # one-time
-cd Frontend
-dotnet run
-```
-
-The client connects to `https://localhost:7235` by default. To change it, set `api.baseUrl` in `%LOCALAPPDATA%\Ognia\settings.json` after first launch (or edit `ApiSettings.BaseUrl` in `Frontend/Helpers/AppSettings.cs` before building).
-
-### 🎧 First use
-
-1. **Continue as Guest** to try without a backend account, or register.
+1. Click **Continue as Guest** to start immediately without a server, or sign in if you have [Ognia-Server](https://github.com/XxDaShTixX/Ognia-Server) running.
 2. Create a playlist.
-3. Paste a YouTube URL.
-4. Click **Download** to fetch audio locally.
+3. Paste a YouTube URL (`youtube.com/watch?v=...`, `youtu.be/...`, or `music.youtube.com/watch?v=...`).
+4. Click **Download** to save the audio locally.
 5. Click **Play**.
+
+### 📦 Building installers and releases
+
+Builds are packaged with [Velopack](https://velopack.io/). The `Ognia/Velopack/` folder holds the tooling:
+
+- `Run.bat` prompts for a version, publishes `Wpf`, and packs the release into `Ognia/Velopack/Releases/`.
+- `Build.ps1` is the script `Run.bat` invokes — clean publish, `vpk pack`.
+
+To cut a release:
+
+1. Run `Ognia/Velopack/Run.bat` and enter the version (e.g. `0.0.2`).
+2. Go to the GitHub Releases page, create a new tag `v<version>`, and upload **all** files from `Ognia/Velopack/Releases/` — `releases.win.json`, `assets.win.json`, `Ognia-<version>-full.nupkg`, and the installer.
+3. Publish the release as **normal**, not pre-release, for stable users. Mark it **pre-release** to only offer it to users on the pre-release channel.
+
+Installed apps check GitHub on startup, download any newer release in the background, and apply it on exit. The new version runs the next time the app launches.
 
 ## 📁 Where files live
 
 **Audio** — `%USERPROFILE%\Music\Ognia\<playlist>\<track>.m4a` (per-playlist folder).
 
-**App data** — `%LOCALAPPDATA%\Ognia\`:
+**App data** — `%APPDATA%\Ognia\`:
 
 | File | Purpose |
 |---|---|
-| `settings.json` | App mode, active theme, music root; playback state (volume, repeat, shuffle, last track + position); window geometry; last opened playlist |
+| `settings.json` | App mode, active theme; API base URL; playback state (volume, repeat, shuffle, last track + position); window geometry and opacity; update preferences; last opened playlist |
 | `token.json` | JWT + refresh token + expiry |
 | `library.json` | Guest-mode playlists and tracks |
 | `Themes/` | Theme JSON files (seeded from embedded defaults) |
 | `playlist-covers/` | Generated 2×2 cover collages |
+| `previews/` | Temporary search-result previews, wiped on exit |
 
-**Database** — `Backend/database.db` (SQLite, created by `dotnet ef database update`).
+**Install** — `%LOCALAPPDATA%\Ognia\` (Velopack's install directory; separate from app data to avoid collisions on update).
+
+**Database** — `Server/database.db` (SQLite, created by `dotnet ef database update`).
 
 ## 🎵 Track sources
 
@@ -129,9 +128,9 @@ Each track has a `(SourceName, SourceId)` pair — e.g. `("youtube", "dQw4w9WgXc
 
 ### ➕ Adding a new source
 
-Implement `ITrackSourceService` in the backend (see `Backend/Services/TrackSourceService/`), add a `TrackSource` enum member, add its wire name to `TrackSourceExtensions`, and register it in `Program.cs`.
+Implement `ITrackSourceService` in the server (see `Server/Services/TrackSourceService/`), add a `TrackSource` enum member, add its wire name to `TrackSourceExtensions`, and register it in `Program.cs`.
 
-Note: the backend currently registers a single `ITrackSourceService` (`YouTubeTrackSourceService`) and the add-track endpoint uses that one instance directly. To support multiple sources, change the registration to a collection (`IEnumerable<ITrackSourceService>`) and update the endpoint to dispatch by `CanHandle(url)` — the interface is already designed for this.
+Note: the server currently registers a single `ITrackSourceService` (`YouTubeTrackSourceService`) and the add-track endpoint uses that one instance directly. To support multiple sources, change the registration to a collection (`IEnumerable<ITrackSourceService>`) and update the endpoint to dispatch by `CanHandle(url)` — the interface is already designed for this.
 
 ## 🤝 Contributing
 
@@ -139,7 +138,7 @@ Contributions are welcome — this started as a personal project, and it's bette
 
 ### 🐛 Found a bug or want a feature?
 
-Open an [issue](https://github.com/XxDaShTixX/Ognia/issues). Both are equally welcome.
+Open an [issue](https://github.com/XxDaShTixX/Ognia-WPF/issues). Both are equally welcome.
 
 - **Bugs** — describe what you expected, what happened, and how to reproduce it. Screenshots or stack traces help.
 - **Features** — describe the use case, not just the solution. "I want to X so that Y" is more useful than "add a button called Z."
@@ -153,7 +152,7 @@ Open an [issue](https://github.com/XxDaShTixX/Ognia/issues). Both are equally we
    # e.g. Dash-FixPlaylistRename, Dash-AddKeyboardShortcuts
    ```
 3. **Make your change.** Keep commits focused; a single feature or fix per branch is ideal. The smaller the change, the better.
-4. **Test it.** `dotnet build` must pass. If you touched the backend, run it and click through the flow. If you touched the client, run it with both guest mode and an account.
+4. **Test it.** `dotnet build` must pass. Run the client and test your changes in both **Guest Mode** and with an account (if applicable).
 5. **Open a pull request** against `main`. Describe what changed and why. Reference the issue number if there is one (`Closes #12`).
 
 ### 🤖 AI-assisted contributions
@@ -162,24 +161,28 @@ Using AI tools (Copilot, Claude, ChatGPT, Cursor, etc.) is fine. You don't need 
 
 ### 🔍 What I'll look at in a PR
 
-- Does it work? Build clean, no errors or warning, no obvious regressions.
-- Does it fit the existing structure? MVVM in the client, DTOs in the backend, `ITrackSourceService` for new sources.
-- Does it work in guest mode too? Anything user-facing should either function with `LocalMusicRepo` or be explicitly hidden when no backend is configured.
-- Is the diff small? Large sweeping refactors are harder to review than focused changes.
+- **Does it work?** Clean build, no errors or warnings, no obvious regressions.
+- **Does it fit the existing structure?** Plain MVVM (`INotifyPropertyChanged`, `ICommand`), clean separation of views, view models, and local repositories/services.
+- **Does it work in guest mode too?** Anything user-facing should either function with `LocalMusicRepo` or be explicitly hidden when no backend is configured.
+- **Is the diff small?** Large sweeping refactors are harder to review than focused changes.
 
 ### 🚫 What I won't merge
 
-- Secrets in commits (JWT keys, API tokens, anything in `appsettings.json` that looks like a real credential).
-- Bypassing guest mode when it's trivial to support.
-- New source integrations that violate a platform's terms of service.
+- Secrets or personal tokens in commits.
+- Breaking or bypassing guest mode when it's trivial to support.
+- Integrations that violate a platform's terms of service.
 
 ### 🧭 Not sure where to start?
 
-[Open issues](https://github.com/XxDaShTixX/Ognia/issues) tagged `General` are a good entry point. Or open an issue describing what you'd like to build and we'll figure out the approach together before you write code.
+[Open issues](https://github.com/XxDaShTixX/Ognia-WPF/issues) tagged `General` are a good entry point. Or open an issue describing what you'd like to build and we'll figure out the approach together before you write code.
 
 ### 🌱 No contribution is too small
 
 Typo fixes, README improvements, clarifying a comment — all welcome. You don't need to rewrite a subsystem to help.
+
+## 🔗 Related
+
+- **[Ognia-Server](https://github.com/XxDaShTixX/Ognia-Server)** — Optional ASP.NET Core backend for user accounts, cloud playlist sync, and server-side metadata lookups.
 
 ## ⚖️ Legal
 

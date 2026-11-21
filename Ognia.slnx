@@ -1,4 +1,3 @@
 <Solution>
-  <Project Path="Backend/Backend.csproj" />
-  <Project Path="Frontend/Frontend.csproj" Id="12360eb9-897f-4709-ab61-5e2d8d58f3ff" />
+  <Project Path="Wpf/Wpf.csproj" />
 </Solution>
